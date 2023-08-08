@@ -23,7 +23,6 @@
 /*
 Pin definitions for STM32F7 STM32-DVM rev 5 Board:
 
-COS      PB13   input
 PTT      PB12   output
 COSLED   PB4    output
 LED      PB3    output
@@ -34,15 +33,10 @@ MODE3    PB7    output
 MODE4    PB8    output
 
 RX       PB0    analog input
-RSSI     PB1    analog input
 TX       PA4    analog output
 
 EXT_CLK  PA15   input
 */
-
-#define PIN_COS           GPIO_Pin_13
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
 
 #define PIN_PTT           GPIO_Pin_12
 #define PORT_PTT          GPIOB
@@ -81,12 +75,8 @@ EXT_CLK  PA15   input
 #define PORT_RX           GPIOB
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOB
 
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_9
-#define PORT_RSSI         GPIOB
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOB
-
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1
 
 #endif
+

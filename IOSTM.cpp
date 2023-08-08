@@ -67,12 +67,6 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_LED, &GPIO_InitStruct);
 
-   // Init the input pins PIN_COS
-   RCC_AHB1PeriphClockCmd(RCC_Per_COS, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_COS;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_IN;
-   GPIO_Init(PORT_COS, &GPIO_InitStruct);
-
 #if defined(MODE_LEDS)
    // Mode 1 pin
    RCC_AHB1PeriphClockCmd(RCC_Per_MODE1, ENABLE);
@@ -97,32 +91,6 @@ void CIO::initInt()
    GPIO_InitStruct.GPIO_Pin   = PIN_MODE4;
    GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
    GPIO_Init(PORT_MODE4, &GPIO_InitStruct);
-#endif
-
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   // Mode 1 mode pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_MMODE1, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_MMODE1;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_MMODE1, &GPIO_InitStruct);
-
-   // Mode 2 mode pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_MMODE2, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_MMODE2;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_MMODE2, &GPIO_InitStruct);
-
-   // Mode 3 mode pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_MMODE3, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_MMODE3;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_MMODE3, &GPIO_InitStruct);
-
-   // Mode 4 mode pin
-   RCC_AHB1PeriphClockCmd(RCC_Per_MMODE4, ENABLE);
-   GPIO_InitStruct.GPIO_Pin   = PIN_MMODE4;
-   GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_OUT;
-   GPIO_Init(PORT_MMODE4, &GPIO_InitStruct);
 #endif
 }
 
@@ -149,23 +117,8 @@ void CIO::startInt()
    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
    GPIO_Init(PORT_RX, &GPIO_InitStruct);
 
-#if defined(SEND_RSSI_DATA)
-   // Enable ADC2 clock
-   RCC_AHB1PeriphClockCmd(RCC_Per_RSSI, ENABLE);
-   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
-   // Enable ADC2 GPIO
-   GPIO_InitStruct.GPIO_Pin  = PIN_RSSI;
-   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;
-   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;
-   GPIO_Init(PORT_RSSI, &GPIO_InitStruct);
-#endif
-
    // Init ADCs in dual mode (RSSI), div clock by two
-#if defined(SEND_RSSI_DATA)
-   ADC_CommonInitStructure.ADC_Mode             = ADC_DualMode_RegSimult;
-#else
    ADC_CommonInitStructure.ADC_Mode             = ADC_Mode_Independent;
-#endif
    ADC_CommonInitStructure.ADC_Prescaler        = ADC_Prescaler_Div2;
    ADC_CommonInitStructure.ADC_DMAAccessMode    = ADC_DMAAccessMode_Disabled;
    ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
@@ -187,16 +140,6 @@ void CIO::startInt()
 
    // Enable ADC1
    ADC_Cmd(ADC1, ENABLE);
-
-#if defined(SEND_RSSI_DATA)
-   ADC_Init(ADC2, &ADC_InitStructure);
-
-   ADC_EOCOnEachRegularChannelCmd(ADC2, ENABLE);
-   ADC_RegularChannelConfig(ADC2, PIN_RSSI_CH, 1, ADC_SampleTime_3Cycles);
-
-   // Enable ADC2
-   ADC_Cmd(ADC2, ENABLE);
-#endif
 
    // Init the DAC
    DAC_InitTypeDef DAC_InitStructure;
@@ -322,18 +265,12 @@ void CIO::setMode1Int(bool on)
 #if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_MODE1, PIN_MODE1, on ? Bit_SET : Bit_RESET);
 #endif
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MMODE1, PIN_MMODE1, on ? Bit_SET : Bit_RESET);
-#endif
 }
 
 void CIO::setMode2Int(bool on)
 {
 #if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_MODE2, PIN_MODE2, on ? Bit_SET : Bit_RESET);
-#endif
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MMODE2, PIN_MMODE2, on ? Bit_SET : Bit_RESET);
 #endif
 }
 
@@ -342,18 +279,12 @@ void CIO::setMode3Int(bool on)
 #if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_MODE3, PIN_MODE3, on ? Bit_SET : Bit_RESET);
 #endif
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MMODE3, PIN_MMODE3, on ? Bit_SET : Bit_RESET);
-#endif
 }
 
 void CIO::setMode4Int(bool on)
 {
 #if defined(MODE_LEDS)
    GPIO_WriteBit(PORT_MODE4, PIN_MODE4, on ? Bit_SET : Bit_RESET);
-#endif
-#if defined(MODE_PINS) && defined(STM32F4_NUCLEO_MORPHO_HEADER) && (defined(STM32F4_NUCLEO) || defined(STM32F722_RPT_HAT))
-   GPIO_WriteBit(PORT_MMODE4, PIN_MMODE4, on ? Bit_SET : Bit_RESET);
 #endif
 }
 

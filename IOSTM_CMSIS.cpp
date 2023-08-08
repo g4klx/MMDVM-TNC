@@ -32,7 +32,6 @@ Pin definitions for STM32F1 POG Board:
 PTT      PB12   output
 COSLED   PB5    output
 LED      PB4    output
-COS      PB13   input/PD
 
 MODE1    PB7    output
 MODE2    PB6    output
@@ -40,14 +39,12 @@ MODE3    PB8    output
 MODE4    PB9    output
 
 RX       PB0    analog input (ADC1_8)
-RSSI     PB1    analog input (ADC2_9)
 TX       PA4    analog output (DAC_OUT1)
 
 EXT_CLK  PA15   input (AF: TIM2_CH1_ETR)
 
 USART1_TXD PA9  output (AF)
 USART1_RXD PA10  input (AF)
-
 */
 
 #define PIN_PTT           12
@@ -59,9 +56,6 @@ USART1_RXD PA10  input (AF)
 #define PIN_LED           4
 #define PORT_LED          GPIOB
 #define BB_LED            *((bitband_t)BITBAND_PERIPH(&PORT_LED->ODR, PIN_LED))
-#define PIN_COS           13
-#define PORT_COS          GPIOB
-#define BB_COS            *((bitband_t)BITBAND_PERIPH(&PORT_COS->IDR, PIN_COS))
 
 #define PIN_MODE1         7
 #define PORT_MODE1        GPIOB
@@ -79,9 +73,6 @@ USART1_RXD PA10  input (AF)
 #define PIN_RX            0
 #define PIN_RX_ADC_CH     8
 #define PORT_RX           GPIOB
-#define PIN_RSSI          1
-#define PIN_RSSI_ADC_CH   9
-#define PORT_RSSI         GPIOB
 #define PIN_TX            4
 #define PIN_TX_DAC_CH     1
 #define PORT_TX           GPIOA
@@ -215,9 +206,6 @@ static inline void GPIOInit()
   GPIOConfigPin(PORT_MODE4,  PIN_MODE4,  GPIO_CRL_MODE0_1);
 
   GPIOConfigPin(PORT_RX, PIN_RX, 0);
-#if defined(SEND_RSSI_DATA)
-  GPIOConfigPin(PORT_RSSI, PIN_RSSI, 0);
-#endif
   GPIOConfigPin(PORT_TX, PIN_TX, 0);
 
 #if defined(EXTERNAL_OSC)
@@ -239,14 +227,6 @@ static inline void ADCInit()
   RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_ADCPRE_Msk)
               | RCC_CFGR_ADCPRE_DIV6; // ADC clock divided by 6 (72MHz/6 = 12MHz)
   RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
-#if defined(SEND_RSSI_DATA)
-  RCC->APB2ENR |= RCC_APB2ENR_ADC2EN;
-#endif
-
-  // Init ADCs in dual mode (RSSI)
-#if defined(SEND_RSSI_DATA)
-  ADC1->CR1 = ADC_CR1_DUALMOD_1|ADC_CR1_DUALMOD_2;  // Regular simultaneous mode
-#endif
 
   // Set sampling time to 7.5 cycles
   if (PIN_RX_ADC_CH < 10) {
@@ -254,44 +234,21 @@ static inline void ADCInit()
   } else {
     ADC1->SMPR1 = ADC_SMPR1_SMP10_0 << (3*PIN_RX_ADC_CH);
   }
-#if defined(SEND_RSSI_DATA)
-  if (PIN_RSSI_ADC_CH < 10) {
-    ADC2->SMPR2 = ADC_SMPR2_SMP0_0 << (3*PIN_RSSI_ADC_CH); 
-  } else {
-    ADC2->SMPR1 = ADC_SMPR1_SMP10_0 << (3*PIN_RSSI_ADC_CH);
-  }
-#endif
 
   // Set conversion channel (single conversion)
   ADC1->SQR3 = PIN_RX_ADC_CH;
-#if defined(SEND_RSSI_DATA)
-  ADC2->SQR3 = PIN_RSSI_ADC_CH;
-#endif
 
   // Enable ADC
   ADC1->CR2 |= ADC_CR2_ADON;
-
-#if defined(SEND_RSSI_DATA)
-  // Enable ADC2
-  ADC2->CR2 |= ADC_CR2_ADON;
-#endif
 
   // Start calibration
   delay(6*2);
   ADC1->CR2 |= ADC_CR2_CAL;
   while((ADC1->CR2 & ADC_CR2_CAL) == ADC_CR2_CAL)
     ;
-#if defined(SEND_RSSI_DATA)
-  ADC2->CR2 |= ADC_CR2_CAL;
-  while((ADC2->CR2 & ADC_CR2_CAL) == ADC_CR2_CAL)
-    ;
-#endif
   
   // Trigger first conversion
   ADC1->CR2 |= ADC_CR2_ADON;
-#if defined(SEND_RSSI_DATA)
-  ADC2->CR2 |= ADC_CR2_ADON;
-#endif
 }
 
 static inline void DACInit()

@@ -27,7 +27,6 @@
 #else
 #define PIN_LED                13
 #endif
-#define PIN_COS                4
 #define PIN_PTT                5
 #define PIN_COSLED             6
 #define PIN_MODE1              9
@@ -35,7 +34,6 @@
 #define PIN_MODE3              11
 #define PIN_MODE4              12
 #define PIN_ADC                5        // A0,  Pin 14
-#define PIN_RSSI               4        // Teensy 3.5/3.6, A16, Pin 35. Teensy 3.1/3.2, A17, Pin 28
 
 #define PDB_CHnC1_TOS 0x0100
 #define PDB_CHnC1_EN  0x0001
@@ -55,7 +53,6 @@ void CIO::initInt()
   pinMode(PIN_PTT,    OUTPUT);
   pinMode(PIN_COSLED, OUTPUT);
   pinMode(PIN_LED,    OUTPUT);
-  pinMode(PIN_COS,    INPUT);
 
 #if defined(MODE_LEDS)
   // Set up the mode output pins
@@ -91,25 +88,6 @@ void CIO::startInt()
 
   ADC0_SC1A  = ADC_SC1_AIEN | PIN_ADC;                                // Enable ADC interrupt, use A0
   NVIC_ENABLE_IRQ(IRQ_ADC0);
-
-#if defined(SEND_RSSI_DATA)
-  // Initialise ADC1
-  SIM_SCGC3 |= SIM_SCGC3_ADC1;
-  ADC1_CFG1  = ADC_CFG1_ADIV(1) | ADC_CFG1_ADICLK(1) |                // Single-ended 12 bits, long sample time
-               ADC_CFG1_MODE(1) | ADC_CFG1_ADLSMP;
-  ADC1_CFG2  = ADC_CFG2_MUXSEL | ADC_CFG2_ADLSTS(2);                  // Select channels ADxxxb
-  ADC1_SC2   = ADC_SC2_REFSEL(0);                                     // Voltage ref external, software trigger
-  ADC1_SC3   = ADC_SC3_AVGE | ADC_SC3_AVGS(0);                        // Enable averaging, 4 samples
-
-  ADC1_SC3  |= ADC_SC3_CAL;
-  while (ADC1_SC3 & ADC_SC3_CAL)                                      // Wait for calibration
-    ;
-
-  uint16_t sum1 = ADC1_CLPS + ADC1_CLP4 + ADC1_CLP3 +                 // Plus side gain
-                  ADC1_CLP2 + ADC1_CLP1 + ADC1_CLP0;
-  sum1 = (sum1 / 2U) | 0x8000U;
-  ADC1_PG    = sum1;
-#endif
 
 #if defined(EXTERNAL_OSC)
   // Set ADC0 to trigger from the LPTMR at 24 kHz

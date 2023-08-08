@@ -26,28 +26,17 @@ Pin definitions for MMDVM_RPT_Hat Pi-Hat F0DEI DB9MAT DF2ET board:
 PTT      PB14   output
 COSLED   PB13   output
 LED      PB12   output
-COS      PC0    input
 
 MODE1    PB15   output
 MODE2    PC6    output
 MODE3    PC7    output
 MODE4    PC8    output
 
-MMODE1   PC1    output
-MMODE2   PC2    output
-MMODE3   PC3    output
-MMODE4   PC4    output
-
 RX       PA0    analog input
-RSSI     PA7    analog input
 TX       PA4    analog output
 
 EXT_CLK  PA15   input
 */
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
 
 #define PIN_PTT           GPIO_Pin_14
 #define PORT_PTT          GPIOB
@@ -77,23 +66,6 @@ EXT_CLK  PA15   input
 #define PORT_MODE4        GPIOC
 #define RCC_Per_MODE4     RCC_AHB1Periph_GPIOC
 
-#if defined(MODE_PINS)
-#define PIN_MMODE1        GPIO_Pin_1
-#define PORT_MMODE1       GPIOC
-#define RCC_Per_MMODE1    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE2        GPIO_Pin_2
-#define PORT_MMODE2       GPIOC
-#define RCC_Per_MMODE2    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE3        GPIO_Pin_3
-#define PORT_MMODE3       GPIOC
-#define RCC_Per_MMODE3    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE4        GPIO_Pin_4
-#define PORT_MMODE4       GPIOC
-#define RCC_Per_MMODE4    RCC_AHB1Periph_GPIOC
-
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
 #define PORT_EXT_CLK      GPIOA
@@ -102,11 +74,6 @@ EXT_CLK  PA15   input
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

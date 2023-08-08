@@ -26,7 +26,6 @@ Pin definitions for STM32F722 Pi Board:
 PTT      PB13   output
 COSLED   PB14   output
 LED      PB15   output
-COS      PC0    input
 
 MODE1    PC7    output
 MODE2    PC8    output
@@ -34,15 +33,10 @@ MODE3    PA8    output
 MODE4    PC9    output
 
 RX       PA0    analog input
-RSSI     PA7    analog input
 TX       PA4    analog output
 
 EXT_CLK  PA15   input
 */
-
-#define PIN_COS           GPIO_Pin_0
-#define PORT_COS          GPIOC
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOC
 
 #define PIN_PTT           GPIO_Pin_13
 #define PORT_PTT          GPIOB
@@ -80,11 +74,6 @@ EXT_CLK  PA15   input
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_7
-#define PIN_RSSI_CH       ADC_Channel_7
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

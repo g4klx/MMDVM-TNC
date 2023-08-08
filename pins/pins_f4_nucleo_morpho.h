@@ -26,28 +26,17 @@ Pin definitions for STM32F4 Nucleo boards (ST Morpho header):
 PTT      PB13   output           CN10 Pin30
 COSLED   PB14   output           CN10 Pin28
 LED      PA5    output           CN10 Pin11
-COS      PB15   input            CN10 Pin26
 
 MODE1    PB10   output           CN10 Pin25
 MODE2    PB4    output           CN10 Pin27
 MODE3    PB5    output           CN10 Pin29
 MODE4    PB3    output           CN10 Pin31
 
-MMODE1   PC4    output           CN10 Pin34
-MMODE2   PC5    output           CN10 Pin6
-MMODE3   PC2    output           CN7 Pin35
-MMODE4   PC3    output           CN7 Pin37
-
 RX       PA0    analog input     CN7 Pin28
-RSSI     PA1    analog input     CN7 Pin30
 TX       PA4    analog output    CN7 Pin32
 
 EXT_CLK  PA15   input            CN7 Pin17
 */
-
-#define PIN_COS           GPIO_Pin_15
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
 
 #define PIN_PTT           GPIO_Pin_13
 #define PORT_PTT          GPIOB
@@ -77,23 +66,6 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PORT_MODE4        GPIOB
 #define RCC_Per_MODE4     RCC_AHB1Periph_GPIOB
 
-#if defined(MODE_PINS)
-#define PIN_MMODE1        GPIO_Pin_4
-#define PORT_MMODE1       GPIOC
-#define RCC_Per_MMODE1    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE2        GPIO_Pin_5
-#define PORT_MMODE2       GPIOC
-#define RCC_Per_MMODE2    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE3        GPIO_Pin_2
-#define PORT_MMODE3       GPIOC
-#define RCC_Per_MMODE3    RCC_AHB1Periph_GPIOC
-
-#define PIN_MMODE4        GPIO_Pin_3
-#define PORT_MMODE4       GPIOC
-#define RCC_Per_MMODE4    RCC_AHB1Periph_GPIOC
-
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
 #define PORT_EXT_CLK      GPIOA
@@ -102,11 +74,6 @@ EXT_CLK  PA15   input            CN7 Pin17
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

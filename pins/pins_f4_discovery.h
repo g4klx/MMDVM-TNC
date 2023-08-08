@@ -26,7 +26,6 @@ Pin definitions for STM32F4 Discovery Board:
 PTT      PB13   output           P1 Pin37
 COSLED   PA7    output           P1 Pin17
 LED      PD15   output           P1 Pin47
-COS      PA5    input            P1 Pin15
 
 MODE1    PD12   output           P1 Pin44
 MODE2    PD13   output           P1 Pin45
@@ -34,15 +33,10 @@ MODE3    PD14   output           P1 Pin46
 MODE4    PD11   output           P1 Pin43
 
 RX       PA0    analog input     P1 Pin12
-RSSI     PA1    analog input     P1 Pin11
 TX       PA4    analog output    P1 Pin16
 
 EXT_CLK  PA15   input            P2 Pin40
 */
-
-#define PIN_COS           GPIO_Pin_5
-#define PORT_COS          GPIOA
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOA
 
 #define PIN_PTT           GPIO_Pin_13
 #define PORT_PTT          GPIOB
@@ -80,11 +74,6 @@ EXT_CLK  PA15   input            P2 Pin40
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

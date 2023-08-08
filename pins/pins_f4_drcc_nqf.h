@@ -27,20 +27,12 @@ TX/PTT_LED  PB12   output
 RX/COS_LED  PB5    output
 STATUS_LED  PB10   output
 
-COS_IN      PB13   input
-
 MODE1       N/A
 MODE2       N/A
 MODE3       N/A
 MODE4       N/A
 
-MMODE2/BIT0 PB8    output
-MMODE3/BIT1 PB9    output
-MMODE1/BIT2 PB14   output
-MMODE4/BIT3 PB15   output          Generic Mode Pins
-
 RX          PA0    analog input
-RSSI        PA1    analog input
 TX          PA4    analog output
 
 EXT_CLK     PA15   input
@@ -55,10 +47,6 @@ I2C1_SCL    PB6    output
 I2C1_SDA    PB7    output          OLED Data Communication as master
 
 */
-
-#define PIN_COS           GPIO_Pin_13
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
 
 #define PIN_PTT           GPIO_Pin_12
 #define PORT_PTT          GPIOB
@@ -92,24 +80,6 @@ I2C1_SDA    PB7    output          OLED Data Communication as master
 // #define PORT_MODE4        GPIOB
 // #define RCC_Per_MODE4     RCC_AHB1Periph_GPIOB
 
-#if defined(MODE_PINS)
-#define PIN_MMODE1        GPIO_Pin_9
-#define PORT_MMODE1       GPIOB
-#define RCC_Per_MMODE1    RCC_AHB1Periph_GPIOB
-
-#define PIN_MMODE2        GPIO_Pin_8
-#define PORT_MMODE2       GPIOB
-#define RCC_Per_MMODE2    RCC_AHB1Periph_GPIOB
-
-#define PIN_MMODE3        GPIO_Pin_14
-#define PORT_MMODE3       GPIOB
-#define RCC_Per_MMODE3    RCC_AHB1Periph_GPIOB
-
-#define PIN_MMODE4        GPIO_Pin_15
-#define PORT_MMODE4       GPIOB
-#define RCC_Per_MMODE4    RCC_AHB1Periph_GPIOB
-#endif
-
 #define PIN_EXT_CLK       GPIO_Pin_15
 #define SRC_EXT_CLK       GPIO_PinSource15
 #define PORT_EXT_CLK      GPIOA
@@ -118,11 +88,6 @@ I2C1_SDA    PB7    output          OLED Data Communication as master
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_1
-#define PIN_RSSI_CH       ADC_Channel_1
-#define PORT_RSSI         GPIOA
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOA
 
 #define PIN_TX            GPIO_Pin_4
 #define PIN_TX_CH         DAC_Channel_1

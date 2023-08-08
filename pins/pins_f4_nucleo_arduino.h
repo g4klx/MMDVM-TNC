@@ -26,7 +26,6 @@ Pin definitions for STM32F4 Nucleo boards (Arduino header):
 PTT      PB10   output           CN9 Pin7
 COSLED   PB3    output           CN9 Pin4
 LED      PB5    output           CN9 Pin5
-COS      PB4    input            CN9 Pin6
 
 MODE1    PA1    output           CN8 Pin2
 MODE2    PA4    output           CN8 Pin3
@@ -34,15 +33,10 @@ MODE3    PB0    output           CN8 Pin4
 MODE4    PC1    output           CN8 Pin5
 
 RX       PA0    analog input     CN8 Pin1
-RSSI     PC0    analog input     CN8 Pin6
 TX       PA5    analog output    CN5 Pin6
 
 EXT_CLK  PB8    input            CN5 Pin10
 */
-
-#define PIN_COS           GPIO_Pin_4
-#define PORT_COS          GPIOB
-#define RCC_Per_COS       RCC_AHB1Periph_GPIOB
 
 #define PIN_PTT           GPIO_Pin_10
 #define PORT_PTT          GPIOB
@@ -80,11 +74,6 @@ EXT_CLK  PB8    input            CN5 Pin10
 #define PIN_RX_CH         ADC_Channel_0
 #define PORT_RX           GPIOA
 #define RCC_Per_RX        RCC_AHB1Periph_GPIOA
-
-#define PIN_RSSI          GPIO_Pin_0
-#define PIN_RSSI_CH       ADC_Channel_10
-#define PORT_RSSI         GPIOC
-#define RCC_Per_RSSI      RCC_AHB1Periph_GPIOC
 
 #define PIN_TX            GPIO_Pin_5
 #define PIN_TX_CH         DAC_Channel_2
