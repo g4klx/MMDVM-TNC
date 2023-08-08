@@ -70,6 +70,8 @@ const uint16_t MAX_SERIAL_COUNT = 100U;
 CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
+m_inFrame(false),
+m_isEscaped(false),
 m_debug(false)
 {
 }
@@ -77,6 +79,13 @@ m_debug(false)
 void CSerialPort::start()
 {
   beginInt(1U, SERIAL_SPEED);
+#if defined(SERIAL_DEBUGGING)
+  beginInt(3U, DEBUGGING_SPEED);
+#endif
+
+  ax25TX.setTXDelay(TX_DELAY / 10U);
+  ax25RX.setPPersistence(P_PERSISTENCE);
+  ax25RX.setSlotTime(SLOT_TIME / 10U);
 }
 
 void CSerialPort::process()
@@ -84,19 +93,37 @@ void CSerialPort::process()
   while (availableForReadInt(1U)) {
     uint8_t c = readInt(1U);
 
-    if (m_ptr == 0U) {
+    if (!m_inFrame) {
       if (c == KISS_FEND) {
-        // Handle the frame start correctly
-        m_buffer[m_ptr++] = c;
+        // Handle the frame start
+        m_inFrame   = true;
+        m_isEscaped = false;
+        m_ptr       = 0U;
       }
     } else {
-      // Any other bytes are added to the buffer
-      m_buffer[m_ptr++] = c;
-
-      if (c == KISS_FEND) {
-        if (m_ptr > 2U)
-          processMessage();
-        m_ptr = 0U;
+      // Any other bytes are added to the buffer-ish
+      switch (c) {
+        case KISS_TFESC:
+          m_buffer[m_ptr++] = m_isEscaped ? KISS_FESC : KISS_TFESC;
+          m_isEscaped = false;
+          break;
+        case KISS_TFEND:
+          m_buffer[m_ptr++] = m_isEscaped ? KISS_FEND : KISS_TFEND;
+          m_isEscaped = false;
+          break;
+        case KISS_FESC:
+          m_isEscaped = true;
+          break;
+        case KISS_FEND:
+          if (m_ptr > 0U)
+            processMessage();
+          m_inFrame   = false;
+          m_isEscaped = false;
+          m_ptr       = 0U;
+          break;
+        default:
+          m_buffer[m_ptr++] = c;
+          break;
       }
     }
   }
@@ -104,28 +131,44 @@ void CSerialPort::process()
 
 void CSerialPort::processMessage()
 {
-  switch (m_buffer[1U]) {
+  switch (m_buffer[0U]) {
     case KISS_TYPE_DATA:
+      ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
       break;
     case KISS_TYPE_TX_DELAY:
+      ax25TX.setTXDelay(m_buffer[1U]);
+      DEBUG2("Setting TX delay to", m_buffer[1U]);
       break;
     case KISS_TYPE_P_PERSISTENCE:
+      ax25RX.setPPersistence(m_buffer[1U]);
+      DEBUG2("Setting p-persistence to", m_buffer[1U]);
       break;
     case KISS_TYPE_SLOT_TIME:
+      ax25RX.setSlotTime(m_buffer[1U]);
+      DEBUG2("Setting slot time to", m_buffer[1U]);
       break;
-    case KISS_TYPE_TX_TAIL:
-      break;
+//  case KISS_TYPE_TX_TAIL:
+//    break;
     case KISS_TYPE_FULL_DUPLEX:
+      m_duplex = m_buffer[1U] != 0U;
+      DEBUG2("Setting full duplex to", m_buffer[1U]);
       break;
-    case KISS_TYPE_DATA_WITH_ACK:
+    case KISS_TYPE_SET_HARDWARE:
+      m_mode = m_buffer[1U];
+      DEBUG2("Setting mode to", m_buffer[1U]);
+      break;
+    case KISS_TYPE_DATA_WITH_ACK: {
+        uint16_t token = (m_buffer[1U] << 8) + (m_buffer[2U] << 0);
+        ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+      }
       break;
     default:
-      DEBUG2("Unhandled KISS frame type", m_buffer[1U]);
+      DEBUG2("Unhandled KISS frame type", m_buffer[0U]);
       break;
   }
 }
 
-void CSerialPort::writeAX25Data(uint8_t type, const uint8_t* data, uint16_t length)
+void CSerialPort::writeKISSData(uint8_t type, const uint8_t* data, uint16_t length)
 {
   uint8_t  buffer[512U];
   uint16_t pos = 0U;
@@ -155,172 +198,111 @@ void CSerialPort::writeAX25Data(uint8_t type, const uint8_t* data, uint16_t leng
   writeInt(1U, buffer, pos);
 }
 
+void CSerialPort::writeKISSAck(uint16_t token)
+{
+  writeKISSData(KISS_TYPE_ACK, (uint8_t*)&token, sizeof(uint16_t));
+}
+
 void CSerialPort::writeDebug(const char* text)
 {
-/*
-  if (!m_debug)
-    return;
-
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG1;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-*/
+#if defined(SERIAL_DEBUGGING)
+  writeInt(3U, (uint8_t*)text, ::strlen(text));
+#endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1)
 {
-/*
-  if (!m_debug)
-    return;
-
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG2;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[count++] = (n1 >> 8) & 0xFF;
-  reply[count++] = (n1 >> 0) & 0xFF;
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-*/
+#if defined(SERIAL_DEBUGGING)
+  writeDebug(text);
+  writeDebug(" ");
+  writeDebug(n1);
+#endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 {
-/*
-  if (!m_debug)
-    return;
-
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG3;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[count++] = (n1 >> 8) & 0xFF;
-  reply[count++] = (n1 >> 0) & 0xFF;
-
-  reply[count++] = (n2 >> 8) & 0xFF;
-  reply[count++] = (n2 >> 0) & 0xFF;
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-*/
+#if defined(SERIAL_DEBUGGING)
+  writeDebug(text);
+  writeDebug(" ");
+  writeDebug(n1);
+  writeDebug(" ");
+  writeDebug(n2);
+#endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
 {
-/*
-  if (!m_debug)
-    return;
-
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG4;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[count++] = (n1 >> 8) & 0xFF;
-  reply[count++] = (n1 >> 0) & 0xFF;
-
-  reply[count++] = (n2 >> 8) & 0xFF;
-  reply[count++] = (n2 >> 0) & 0xFF;
-
-  reply[count++] = (n3 >> 8) & 0xFF;
-  reply[count++] = (n3 >> 0) & 0xFF;
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-*/
+#if defined(SERIAL_DEBUGGING)
+  writeDebug(text);
+  writeDebug(" ");
+  writeDebug(n1);
+  writeDebug(" ");
+  writeDebug(n2);
+  writeDebug(" ");
+  writeDebug(n3);
+#endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
 {
-/*
-  if (!m_debug)
-    return;
-
-  uint8_t reply[130U];
-
-  reply[0U] = MMDVM_FRAME_START;
-  reply[1U] = 0U;
-  reply[2U] = MMDVM_DEBUG5;
-
-  uint8_t count = 3U;
-  for (uint8_t i = 0U; text[i] != '\0'; i++, count++)
-    reply[count] = text[i];
-
-  reply[count++] = (n1 >> 8) & 0xFF;
-  reply[count++] = (n1 >> 0) & 0xFF;
-
-  reply[count++] = (n2 >> 8) & 0xFF;
-  reply[count++] = (n2 >> 0) & 0xFF;
-
-  reply[count++] = (n3 >> 8) & 0xFF;
-  reply[count++] = (n3 >> 0) & 0xFF;
-
-  reply[count++] = (n4 >> 8) & 0xFF;
-  reply[count++] = (n4 >> 0) & 0xFF;
-
-  reply[1U] = count;
-
-  writeInt(1U, reply, count, true);
-*/
+#if defined(SERIAL_DEBUGGING)
+  writeDebug(text);
+  writeDebug(" ");
+  writeDebug(n1);
+  writeDebug(" ");
+  writeDebug(n2);
+  writeDebug(" ");
+  writeDebug(n3);
+  writeDebug(" ");
+  writeDebug(n4);
+#endif
 }
 
-void CSerialPort::writeDebugDump(const uint8_t* data, uint16_t length)
+void CSerialPort::writeDebug(int16_t num)
 {
-/*
-  uint8_t reply[512U];
-
-  reply[0U] = MMDVM_FRAME_START;
-
-  if (length > 252U) {
-    reply[1U] = 0U;
-    reply[2U] = (length + 4U) - 255U;
-    reply[3U] = MMDVM_DEBUG_DUMP;
-
-    for (uint16_t i = 0U; i < length; i++)
-      reply[i + 4U] = data[i];
-
-    writeInt(1U, reply, length + 4U);
-  } else {
-    reply[1U] = length + 3U;
-    reply[2U] = MMDVM_DEBUG_DUMP;
-
-    for (uint16_t i = 0U; i < length; i++)
-      reply[i + 3U] = data[i];
-
-    writeInt(1U, reply, length + 3U);
+  if (num == 0) {
+    writeDebug("0");
+    return;
   }
-*/
+
+  bool isNegative = false;
+
+  if (num < 0) {
+    isNegative = true;
+    num = -num;
+  }
+
+  char buffer[10U];
+  uint8_t pos = 0U;
+
+  while (num != 0) {
+    int16_t rem = num % 10;
+    buffer[pos++] = rem + '0';
+    num /= 10;
+  }
+
+  if (isNegative)
+    buffer[pos++] = '-';
+
+  buffer[pos] = '\0';
+
+  reverse(buffer, pos);
+
+  writeDebug(buffer);
 }
 
+void CSerialPort::reverse(char* buffer, uint8_t length) const
+{
+  uint8_t start = 0U;
+  uint8_t end = length - 1U;
+
+  while (start < end) {
+    char temp     = buffer[start];
+    buffer[start] = buffer[end];
+    buffer[end]   = temp;
+
+    end--;
+    start++;
+  }
+}
 

@@ -35,8 +35,28 @@
 // For 19.2 MHz
 // #define EXTERNAL_OSC 19200000
 
-// Select a baud rate for host communication.
+// Baud rate for host communication.
 #define SERIAL_SPEED	38400
+
+// Select the initial packet mode
+// 1 = 1200 bps AFSK AX.25
+// 2 = 9600 bps C4FSK IL2P
+#define	INITIAL_MODE	1
+
+// TX Delay in milliseconds
+#define	TX_DELAY	300
+
+// P-Persistence in x/255
+#define	P_PERSISTENCE	128
+
+// Slot Time in Milliseconds
+#define	SLOT_TIME	100
+
+// Select use of serial debugging
+#define	SERIAL_DEBUGGING
+
+// Baud rate for serial debugging.
+#define DEBUGGING_SPEED	38400
 
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS

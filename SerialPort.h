@@ -35,21 +35,26 @@ public:
 
   void process();
 
-  void writeAX25Data(uint8_t type, const uint8_t* data, uint16_t length);
+  void writeKISSData(uint8_t type, const uint8_t* data, uint16_t length);
+  void writeKISSAck(uint16_t token);
 
   void writeDebug(const char* text);
   void writeDebug(const char* text, int16_t n1);
   void writeDebug(const char* text, int16_t n1, int16_t n2);
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3);
   void writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4);
-  void writeDebugDump(const uint8_t* data, uint16_t length);
 
 private:
   uint8_t  m_buffer[512U];
   uint16_t m_ptr;
+  bool     m_inFrame;
+  bool     m_isEscaped;
   bool     m_debug;
 
   void processMessage();
+
+  void writeDebug(int16_t num);
+  void reverse(char* buffer, uint8_t length) const;
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

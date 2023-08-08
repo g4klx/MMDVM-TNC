@@ -23,6 +23,8 @@
 // Global variables
 bool m_duplex = true;
 
+uint8_t m_mode = INITIAL_MODE;
+
 bool m_tx  = false;
 bool m_dcd = false;
 

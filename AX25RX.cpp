@@ -98,7 +98,7 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
-      serial.writeAX25Data(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
+      serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
     DEBUG1("Decoder 1 reported");
   }
@@ -108,7 +108,7 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
-      serial.writeAX25Data(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
+      serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
     DEBUG1("Decoder 2 reported");
   }
@@ -118,7 +118,7 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
     if (frame.m_fcs != m_lastFCS || m_count > 2U) {
       m_lastFCS = frame.m_fcs;
       m_count   = 0U;
-      serial.writeAX25Data(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
+      serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
     DEBUG1("Decoder 3 reported");
   }
@@ -156,14 +156,14 @@ bool CAX25RX::canTX() const
   return m_canTX;
 }
 
-void CAX25RX::setParams(int8_t twist, uint8_t slotTime, uint8_t pPersist)
+void CAX25RX::setPPersistence(uint8_t pPersist)
 {
-  m_demod1.setTwist(twist - 3);
-  m_demod2.setTwist(twist);
-  m_demod3.setTwist(twist + 3);
-
-  m_slotTime = slotTime * 240U;    // Slot time in samples
   m_pPersist = pPersist;
+}
+
+void CAX25RX::setSlotTime(uint8_t slotTime)
+{
+  m_slotTime = slotTime * 240U;    // Slot time in samples
 }
 
 // Taken from https://www.electro-tech-online.com/threads/ultra-fast-pseudorandom-number-generator-for-8-bit.124249/

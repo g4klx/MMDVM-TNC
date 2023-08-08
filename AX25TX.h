@@ -21,11 +21,14 @@
 #if !defined(AX25TX_H)
 #define  AX25TX_H
 
+#include <vector>
+
 class CAX25TX {
 public:
   CAX25TX();
 
   uint8_t writeData(const uint8_t* data, uint16_t length);
+  uint8_t writeDataAck(uint16_t token, const uint8_t* data, uint16_t length);
 
   void process();
 
@@ -40,6 +43,7 @@ private:
   uint16_t   m_txDelay;
   uint16_t   m_tablePtr;
   bool       m_nrzi;
+  std::vector<uint16_t> m_tokens;
 
   void writeBit(bool b);
   bool NRZI(bool b);

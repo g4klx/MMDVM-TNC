@@ -29,7 +29,8 @@ public:
 
   void samples(q15_t* samples, uint8_t length);
 
-  void setParams(int8_t twist, uint8_t slotTime, uint8_t pPersist);
+  void setPPersistence(uint8_t pPersist);
+  void setSlotTime(uint8_t slotTime);
 
   bool canTX() const;
 

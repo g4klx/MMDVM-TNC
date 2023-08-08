@@ -32,6 +32,7 @@ const uint8_t KISS_TYPE_P_PERSISTENCE  = 0x02U;
 const uint8_t KISS_TYPE_SLOT_TIME      = 0x03U;
 const uint8_t KISS_TYPE_TX_TAIL        = 0x04U;
 const uint8_t KISS_TYPE_FULL_DUPLEX    = 0x05U;
+const uint8_t KISS_TYPE_SET_HARDWARE   = 0x06U;
 const uint8_t KISS_TYPE_DATA_WITH_ACK  = 0x0CU;
 const uint8_t KISS_TYPE_ACK            = 0x0CU;
 const uint8_t KISS_TYPE_POLL           = 0x0EU;

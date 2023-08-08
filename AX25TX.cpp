@@ -55,14 +55,19 @@ m_poLen(0U),
 m_poPtr(0U),
 m_txDelay(360U),
 m_tablePtr(0U),
-m_nrzi(false)
+m_nrzi(false),
+m_tokens()
 {
 }
 
 void CAX25TX::process()
 {
-  if (m_poLen == 0U)
+  if (m_poLen == 0U) {
+    for (const auto& token : m_tokens)
+      serial.writeKISSAck(token);
+    m_tokens.clear();
     return;
+  }
 
   if (!m_duplex) {
     if (m_poPtr == 0U) {
@@ -142,6 +147,13 @@ uint8_t CAX25TX::writeData(const uint8_t* data, uint16_t length)
   }
 
   return 0U;
+}
+
+uint8_t CAX25TX::writeDataAck(uint16_t token, const uint8_t* data, uint16_t length)
+{
+  m_tokens.push_back(token);
+
+  return writeData(data, length);
 }
 
 void CAX25TX::writeBit(bool b)

@@ -60,6 +60,8 @@ const uint16_t TX_BUFFER_LEN = 2000U;
 const uint16_t TX_BUFFER_LEN = 4000U;
 #endif
 
+extern uint8_t m_mode;
+
 extern bool m_duplex;
 
 extern bool m_tx;

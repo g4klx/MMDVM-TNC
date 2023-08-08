@@ -23,6 +23,8 @@
 #include "Config.h"
 #include "Globals.h"
 
+uint8_t m_mode = INITIAL_MODE;
+
 bool m_duplex = false;
 
 bool m_tx  = false;
