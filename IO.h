@@ -34,6 +34,8 @@ public:
 
   void write(q15_t* samples, uint16_t length);
 
+  void showMode();
+
   uint16_t getSpace() const;
 
   void setDecode(bool dcd);
@@ -41,7 +43,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t ax25TXLevel, int16_t txDCOffset, int16_t rxDCOffset);
+  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -55,31 +57,27 @@ public:
   void selfTest();
 
 private:
-  bool                  m_started;
+  bool                   m_started;
 
   CRingBuffer<uint16_t>  m_rxBuffer;
   CRingBuffer<uint16_t>  m_txBuffer;
 
-  arm_biquad_casd_df1_inst_q31 m_dcFilter;
-  q31_t                        m_dcState[4];
+  arm_fir_instance_q15   m_rrc02Filter1;
+  q15_t                  m_rrc02State1[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
 
-  arm_fir_instance_q15 m_rrc02Filter1;
-  q15_t                m_rrc02State1[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  bool                   m_pttInvert;
+  q15_t                  m_rxLevel;
 
-  bool                 m_pttInvert;
-  q15_t                m_rxLevel;
-  q15_t                m_ax25TXLevel;
+  q15_t                  m_mode1TXLevel;
+  q15_t                  m_mode2TXLevel;
 
-  uint16_t             m_rxDCOffset;
-  uint16_t             m_txDCOffset;
+  uint32_t               m_ledCount;
+  bool                   m_ledValue;
 
-  uint32_t             m_ledCount;
-  bool                 m_ledValue;
+  bool                   m_detect;
 
-  bool                 m_detect;
-
-  uint16_t             m_adcOverflow;
-  uint16_t             m_dacOverflow;
+  uint16_t               m_adcOverflow;
+  uint16_t               m_dacOverflow;
 
   // Hardware specific routines
   void initInt();

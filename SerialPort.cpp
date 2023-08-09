@@ -28,7 +28,6 @@
 #include "SerialPort.h"
 #include "Version.h"
 
-
 #if EXTERNAL_OSC == 12000000
 #define TCXO "12.0000 MHz"
 #elif EXTERNAL_OSC == 12288000
@@ -61,11 +60,6 @@ const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, GITVERSION);
 const char HARDWARE[] = concat(HW_TYPE, VERSION, TCXO, __TIME__, __DATE__);
 #endif
 
-const uint8_t PROTOCOL_VERSION   = 2U;
-
-// Parameters for batching serial data
-const int      MAX_SERIAL_DATA  = 250;
-const uint16_t MAX_SERIAL_COUNT = 100U;
 
 CSerialPort::CSerialPort() :
 m_buffer(),
@@ -83,9 +77,13 @@ void CSerialPort::start()
   beginInt(3U, DEBUGGING_SPEED);
 #endif
 
+  DEBUG1(HARDWARE);
+
   ax25TX.setTXDelay(TX_DELAY / 10U);
   ax25RX.setPPersistence(P_PERSISTENCE);
   ax25RX.setSlotTime(SLOT_TIME / 10U);
+
+  io.showMode();
 }
 
 void CSerialPort::process()
@@ -133,33 +131,53 @@ void CSerialPort::processMessage()
 {
   switch (m_buffer[0U]) {
     case KISS_TYPE_DATA:
-      ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
+      switch (m_mode) {
+        case 1U:
+          ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
+          break;
+        default:
+          break;
+      }
       break;
     case KISS_TYPE_TX_DELAY:
       ax25TX.setTXDelay(m_buffer[1U]);
-      DEBUG2("Setting TX delay to", m_buffer[1U]);
+      DEBUG2("Setting TX Delay to", m_buffer[1U]);
       break;
     case KISS_TYPE_P_PERSISTENCE:
       ax25RX.setPPersistence(m_buffer[1U]);
-      DEBUG2("Setting p-persistence to", m_buffer[1U]);
+      DEBUG2("Setting p-Persistence to", m_buffer[1U]);
       break;
     case KISS_TYPE_SLOT_TIME:
       ax25RX.setSlotTime(m_buffer[1U]);
-      DEBUG2("Setting slot time to", m_buffer[1U]);
+      DEBUG2("Setting Slot Time to", m_buffer[1U]);
       break;
 //  case KISS_TYPE_TX_TAIL:
 //    break;
     case KISS_TYPE_FULL_DUPLEX:
       m_duplex = m_buffer[1U] != 0U;
-      DEBUG2("Setting full duplex to", m_buffer[1U]);
+      DEBUG2("Setting Full Duplex to", m_buffer[1U]);
       break;
     case KISS_TYPE_SET_HARDWARE:
       m_mode = m_buffer[1U];
-      DEBUG2("Setting mode to", m_buffer[1U]);
+      io.setParameters(m_buffer[2U] != 0U, m_buffer[3U] != 0U, m_buffer[4U] != 0U, m_buffer[5U], m_buffer[6U], m_buffer[7U]);
+      io.showMode();
+      DEBUG2("Setting Mode to", m_buffer[1U]);
+      DEBUG2("Setting RX Invert to", m_buffer[2U]);
+      DEBUG2("Setting TX Invert to", m_buffer[3U]);
+      DEBUG2("Setting PTT Invert to", m_buffer[4U]);
+      DEBUG2("Setting RX Level to", m_buffer[5U]);
+      DEBUG2("Setting Mode 1 TX Level to", m_buffer[6U]);
+      DEBUG2("Setting Mode 2 TX Level to", m_buffer[7U]);
       break;
     case KISS_TYPE_DATA_WITH_ACK: {
         uint16_t token = (m_buffer[1U] << 8) + (m_buffer[2U] << 0);
-        ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+        switch (m_mode) {
+          case 1U:
+            ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+            break;
+          default:
+            break;
+        }
       }
       break;
     default:
