@@ -36,7 +36,6 @@ m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rrc02Filter1(),
 m_rrc02State1(),
-m_pttInvert(false),
 m_rxLevel(128 * 128),
 m_mode1TXLevel(128 * 128),
 m_mode2TXLevel(128 * 128),
@@ -141,7 +140,7 @@ void CIO::process()
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
     m_tx = false;
-    setPTTInt(m_pttInvert ? true : false);
+    setPTTInt(false);
     DEBUG1("TX OFF");
   }
 
@@ -188,7 +187,7 @@ void CIO::write(q15_t* samples, uint16_t length)
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;
-    setPTTInt(m_pttInvert ? false : true);
+    setPTTInt(true);
     DEBUG1("TX ON");
   }
 
@@ -261,21 +260,11 @@ void CIO::setADCDetection(bool detect)
   m_detect = detect;
 }
 
-void CIO::setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel)
+void CIO::setParameters(uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel)
 {
-  m_pttInvert = pttInvert;
-
   m_rxLevel      = q15_t(rxLevel * 128);
   m_mode1TXLevel = q15_t(mode1TXLevel * 128);
   m_mode2TXLevel = q15_t(mode2TXLevel * 128);
-
-  if (rxInvert)
-    m_rxLevel = -m_rxLevel;
-  
-  if (txInvert) {
-    m_mode1TXLevel = -m_mode1TXLevel;
-    m_mode2TXLevel = -m_mode2TXLevel;
-  }
 }
 
 void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)

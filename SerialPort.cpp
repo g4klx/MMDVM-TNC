@@ -140,34 +140,40 @@ void CSerialPort::processMessage()
       }
       break;
     case KISS_TYPE_TX_DELAY:
-      ax25TX.setTXDelay(m_buffer[1U]);
-      DEBUG2("Setting TX Delay to", m_buffer[1U]);
+      if (m_ptr == 2U) {
+        ax25TX.setTXDelay(m_buffer[1U]);
+        DEBUG2("Setting TX Delay to", m_buffer[1U]);
+      }
       break;
     case KISS_TYPE_P_PERSISTENCE:
-      ax25RX.setPPersistence(m_buffer[1U]);
-      DEBUG2("Setting p-Persistence to", m_buffer[1U]);
+      if (m_ptr == 2U) {
+        ax25RX.setPPersistence(m_buffer[1U]);
+        DEBUG2("Setting p-Persistence to", m_buffer[1U]);
+      }
       break;
     case KISS_TYPE_SLOT_TIME:
-      ax25RX.setSlotTime(m_buffer[1U]);
-      DEBUG2("Setting Slot Time to", m_buffer[1U]);
+      if (m_ptr == 2U) {
+        ax25RX.setSlotTime(m_buffer[1U]);
+        DEBUG2("Setting Slot Time to", m_buffer[1U]);
+      }
       break;
-//  case KISS_TYPE_TX_TAIL:
-//    break;
     case KISS_TYPE_FULL_DUPLEX:
-      m_duplex = m_buffer[1U] != 0U;
-      DEBUG2("Setting Full Duplex to", m_buffer[1U]);
+      if (m_ptr == 2U) {
+        m_duplex = m_buffer[1U] != 0U;
+        DEBUG2("Setting Full Duplex to", m_buffer[1U]);
+      }
       break;
     case KISS_TYPE_SET_HARDWARE:
-      m_mode = m_buffer[1U];
-      io.setParameters(m_buffer[2U] != 0U, m_buffer[3U] != 0U, m_buffer[4U] != 0U, m_buffer[5U], m_buffer[6U], m_buffer[7U]);
-      io.showMode();
-      DEBUG2("Setting Mode to", m_buffer[1U]);
-      DEBUG2("Setting RX Invert to", m_buffer[2U]);
-      DEBUG2("Setting TX Invert to", m_buffer[3U]);
-      DEBUG2("Setting PTT Invert to", m_buffer[4U]);
-      DEBUG2("Setting RX Level to", m_buffer[5U]);
-      DEBUG2("Setting Mode 1 TX Level to", m_buffer[6U]);
-      DEBUG2("Setting Mode 2 TX Level to", m_buffer[7U]);
+      if (m_ptr == 2U) {
+        m_mode = m_buffer[1U];
+        io.showMode();
+        DEBUG2("Setting Mode to", m_buffer[1U]);
+      } else if (m_ptr == 4U) {
+        io.setParameters(m_buffer[1U], m_buffer[2U], m_buffer[3U]);
+        DEBUG2("Setting RX Level to", m_buffer[1U]);
+        DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
+        DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);
+      }
       break;
     case KISS_TYPE_DATA_WITH_ACK: {
         uint16_t token = (m_buffer[1U] << 8) + (m_buffer[2U] << 0);

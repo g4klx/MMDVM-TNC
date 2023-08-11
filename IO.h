@@ -43,7 +43,7 @@ public:
   
   void interrupt();
 
-  void setParameters(bool rxInvert, bool txInvert, bool pttInvert, uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel);
+  void setParameters(uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -65,7 +65,6 @@ private:
   arm_fir_instance_q15   m_rrc02Filter1;
   q15_t                  m_rrc02State1[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
 
-  bool                   m_pttInvert;
   q15_t                  m_rxLevel;
 
   q15_t                  m_mode1TXLevel;
