@@ -67,9 +67,7 @@ m_demod2(6),
 m_demod3(9),
 m_lastFCS(0U),
 m_count(0U),
-m_slotTime(30U),
 m_slotCount(0U),
-m_pPersist(128U),
 m_dcd(false),
 m_canTX(false),
 m_x(1U),
@@ -154,16 +152,6 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
 bool CAX25RX::canTX() const
 {
   return m_canTX;
-}
-
-void CAX25RX::setPPersistence(uint8_t pPersist)
-{
-  m_pPersist = pPersist;
-}
-
-void CAX25RX::setSlotTime(uint8_t slotTime)
-{
-  m_slotTime = slotTime * 240U;    // Slot time in samples
 }
 
 // Taken from https://www.electro-tech-online.com/threads/ultra-fast-pseudorandom-number-generator-for-8-bit.124249/

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -15,35 +15,29 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/* Reed-Solomon encoder/decoder
+ * Copyright 2002, Phil Karn, KA9Q
+ * May be used under the terms of the GNU Lesser General Public License (LGPL)
+ */
 
-#include "Config.h"
+#if !defined(IL2PRS_H)
+#define	IL2PRS_H
 
-#if !defined(AX25TX_H)
-#define  AX25TX_H
+#include <cstdint>
 
-#include <vector>
-
-class CAX25TX {
+class CIL2PRS {
 public:
-  CAX25TX();
+  CIL2PRS(uint8_t nroots);
+  ~CIL2PRS();
 
-  uint8_t writeData(const uint8_t* data, uint16_t length);
-  uint8_t writeDataAck(uint16_t token, const uint8_t* data, uint16_t length);
-
-  void process();
-
-  uint8_t getSpace() const;
+  void encode(uint8_t* data, uint8_t* parity) const;
+  int  decode(uint8_t* data, uint8_t* eras_pos) const;
 
 private:
-  uint8_t    m_poBuffer[600U];
-  uint16_t   m_poLen;
-  uint16_t   m_poPtr;
-  uint16_t   m_tablePtr;
-  bool       m_nrzi;
-  std::vector<uint16_t> m_tokens;
-
-  void writeBit(bool b);
-  bool NRZI(bool b);
+  uint8_t        m_nroots;       /* Number of generator roots = number of parity symbols */
+  const uint8_t* m_alphaTo;      /* log lookup table */
+  const uint8_t* m_indexOf;      /* Antilog lookup table */
+  const uint8_t* m_genpoly;      /* Generator polynomial */
 };
 
 #endif

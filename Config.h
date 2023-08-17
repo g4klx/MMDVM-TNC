@@ -47,7 +47,7 @@
 #define	TX_DELAY	300
 
 // P-Persistence in x/255
-#define	P_PERSISTENCE	128
+#define	P_PERSISTENCE	63
 
 // Slot Time in Milliseconds
 #define	SLOT_TIME	100

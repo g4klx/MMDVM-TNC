@@ -29,9 +29,6 @@ public:
 
   void samples(q15_t* samples, uint8_t length);
 
-  void setPPersistence(uint8_t pPersist);
-  void setSlotTime(uint8_t slotTime);
-
   bool canTX() const;
 
 private:
@@ -42,9 +39,7 @@ private:
   CAX25Demodulator     m_demod3;
   uint16_t             m_lastFCS;
   uint32_t             m_count;
-  uint32_t             m_slotTime;
   uint32_t             m_slotCount;
-  uint8_t              m_pPersist;
   bool                 m_dcd;
   bool                 m_canTX;
   uint8_t              m_x;

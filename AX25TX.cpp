@@ -53,7 +53,6 @@ CAX25TX::CAX25TX() :
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_txDelay(360U),
 m_tablePtr(0U),
 m_nrzi(false),
 m_tokens()
@@ -177,11 +176,6 @@ void CAX25TX::writeBit(bool b)
   }
 
   io.write(buffer, AX25_RADIO_SYMBOL_LENGTH);
-}
-
-void CAX25TX::setTXDelay(uint8_t delay)
-{
-  m_txDelay = delay * 12U;
 }
 
 uint8_t CAX25TX::getSpace() const

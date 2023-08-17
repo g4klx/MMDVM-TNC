@@ -79,10 +79,6 @@ void CSerialPort::start()
 
   DEBUG1(HARDWARE);
 
-  ax25TX.setTXDelay(TX_DELAY / 10U);
-  ax25RX.setPPersistence(P_PERSISTENCE);
-  ax25RX.setSlotTime(SLOT_TIME / 10U);
-
   io.showMode();
 }
 
@@ -141,19 +137,19 @@ void CSerialPort::processMessage()
       break;
     case KISS_TYPE_TX_DELAY:
       if (m_ptr == 2U) {
-        ax25TX.setTXDelay(m_buffer[1U]);
+        m_txDelay = m_buffer[1U] * 12U;
         DEBUG2("Setting TX Delay to", m_buffer[1U]);
       }
       break;
     case KISS_TYPE_P_PERSISTENCE:
       if (m_ptr == 2U) {
-        ax25RX.setPPersistence(m_buffer[1U]);
+        m_pPersist = m_buffer[1U];
         DEBUG2("Setting p-Persistence to", m_buffer[1U]);
       }
       break;
     case KISS_TYPE_SLOT_TIME:
       if (m_ptr == 2U) {
-        ax25RX.setSlotTime(m_buffer[1U]);
+        m_slotTime = m_buffer[1U] * 240U;
         DEBUG2("Setting Slot Time to", m_buffer[1U]);
       }
       break;
