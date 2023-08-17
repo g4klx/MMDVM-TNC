@@ -131,7 +131,8 @@ void CSerialPort::processMessage()
         case 1U:
           ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
-        default:
+        case 2U:
+          il2pTX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
       }
       break;
@@ -177,7 +178,8 @@ void CSerialPort::processMessage()
           case 1U:
             ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
-          default:
+          case 2U:
+            il2pTX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
         }
       }

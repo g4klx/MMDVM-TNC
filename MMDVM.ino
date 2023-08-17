@@ -34,6 +34,9 @@ bool m_dcd = false;
 CAX25RX ax25RX;
 CAX25TX ax25TX;
 
+CIL2PTX il2pTX;
+CIL2PRX il2pRX;
+
 CSerialPort serial;
 CIO io;
 
@@ -49,6 +52,13 @@ void loop()
   io.process();
 
   // The following is for transmitting
-  ax25TX.process();
+  switch (m_mode) {
+    case 1U:
+      ax25TX.process();
+      break;
+    case 2U:
+      il2pTX.process();
+      break;
+  }
 }
 

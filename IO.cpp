@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -169,11 +169,8 @@ void CIO::process()
       case 2U: {
           q15_t vals[RX_BLOCK_SIZE];
           ::arm_fir_fast_q15(&m_rrc02Filter1, samples, vals, RX_BLOCK_SIZE);
-          // dmrDMORX.samples(vals, RX_BLOCK_SIZE);
+          il2pRX.samples(vals, RX_BLOCK_SIZE);
         }
-        break;
-
-      default:
         break;
     }
   }
@@ -199,8 +196,6 @@ void CIO::write(q15_t* samples, uint16_t length)
     case 2U:
       txLevel = m_mode2TXLevel;
       break;
-    default:
-      return;
   }
 
   for (uint16_t i = 0U; i < length; i++) {

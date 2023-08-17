@@ -46,6 +46,8 @@
 #include "SerialPort.h"
 #include "AX25RX.h"
 #include "AX25TX.h"
+#include "IL2PRX.h"
+#include "IL2PTX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -75,6 +77,9 @@ extern CIO io;
 
 extern CAX25RX ax25RX;
 extern CAX25TX ax25TX;
+
+extern CIL2PTX il2pTX;
+extern CIL2PRX il2pRX;
 
 #endif
 
