@@ -138,7 +138,8 @@ void CSerialPort::processMessage()
       break;
     case KISS_TYPE_TX_DELAY:
       if (m_ptr == 2U) {
-        m_txDelay = m_buffer[1U] * 12U;
+        ax25TX.setTXDelay(m_buffer[1U]);
+        il2pTX.setTXDelay(m_buffer[1U]);
         DEBUG2("Setting TX Delay to", m_buffer[1U]);
       }
       break;

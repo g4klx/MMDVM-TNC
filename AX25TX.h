@@ -32,6 +32,7 @@ public:
 
   void process();
 
+  void setTXDelay(uint8_t value);
   void setLevel(uint8_t value);
 
   uint8_t getSpace() const;
@@ -43,6 +44,7 @@ private:
   uint16_t   m_tablePtr;
   bool       m_nrzi;
   q15_t      m_level;
+  uint16_t   m_txDelay;
   std::vector<uint16_t> m_tokens;
 
   void writeBit(bool b);

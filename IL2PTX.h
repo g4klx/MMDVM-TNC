@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "IL2PTXFrame.h"
+#include "RingBuffer.h"
 
 class CIL2PTX {
 public:
@@ -34,19 +35,21 @@ public:
 
   void process();
 
+  void setTXDelay(uint8_t value);
   void setLevel(uint8_t value);
 
   uint8_t getSpace() const;
 
 private:
-  CIL2PTXFrame m_frame;
-  uint8_t      m_poBuffer[600U];
-  uint16_t     m_poLen;
-  uint16_t     m_poPtr;
-  q15_t        m_level;
-  std::vector<uint16_t> m_tokens;
+  CRingBuffer<uint8_t>             m_fifo;
+  arm_fir_interpolate_instance_q15 m_modFilter;
+  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
+  CIL2PTXFrame                     m_frame;
+  q15_t                            m_level;
+  uint16_t                         m_txDelay;
+  std::vector<uint16_t>            m_tokens;
 
-  void writeBit(bool b);
+  void writeByte(uint8_t c);
 };
 
 #endif

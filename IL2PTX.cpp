@@ -18,8 +18,20 @@
 
 #include "Config.h"
 
+#include "IL2PDefines.h"
 #include "Globals.h"
 #include "IL2PTX.h"
+
+// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
+static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
+                                 -5735, -1633, 5651, 14822, 23810, 30367, 32767, 30367, 23810, 14822, 5651, -1633, -5735, -6442,
+                                 -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
+const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
+
+const q15_t LEVELA =  1362;
+const q15_t LEVELB =  454;
+const q15_t LEVELC = -454;
+const q15_t LEVELD = -1362;
 
 const uint8_t BIT_MASK_TABLE1[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U };
 
@@ -32,92 +44,76 @@ const uint8_t BIT_MASK_TABLE2[] = { 0x01U, 0x02U, 0x04U, 0x08U, 0x10U, 0x20U, 0x
 #define READ_BIT2(p,i)    (p[(i)>>3] & BIT_MASK_TABLE2[(i)&7])
 
 CIL2PTX::CIL2PTX() :
+m_fifo(3000U),
+m_modFilter(),
+m_modState(),
 m_frame(false),
-m_poBuffer(),
-m_poLen(0U),
-m_poPtr(0U),
 m_level(MODE2_TX_LEVEL * 128),
+m_txDelay((TX_DELAY / 10U) * 48U),
 m_tokens()
 {
+  ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
+
+  m_modFilter.L           = IL2P_RADIO_SYMBOL_LENGTH;
+  m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = RRC_0_2_FILTER;
+  m_modFilter.pState      = m_modState;
 }
 
 void CIL2PTX::process()
 {
-  if (m_poLen == 0U) {
+  // Nothing to transmit, send the packet tokens back
+  if (!m_tx && m_fifo.getData() == 0U) {
     for (const auto& token : m_tokens)
       serial.writeKISSAck(token);
     m_tokens.clear();
     return;
   }
 
-  if (!m_duplex) {
-    if (m_poPtr == 0U) {
+  // Transmit is off but we have data to send
+  if (!m_tx && m_fifo.getData() > 0U) {
+    if (!m_duplex) {
       bool tx = il2pRX.canTX();
       if (!tx)
         return;
     }
   }
-/*
+
   uint16_t space = io.getSpace();
-
-  while (space > AX25_RADIO_SYMBOL_LENGTH) {
-    bool b = READ_BIT1(m_poBuffer, m_poPtr) != 0U;
-    m_poPtr++;
-
-    writeBit(b);
-
-    space -= AX25_RADIO_SYMBOL_LENGTH;
-
-    if (m_poPtr >= m_poLen) {
-      m_poPtr = 0U;
-      m_poLen = 0U;
+  while (space > (4U * IL2P_RADIO_SYMBOL_LENGTH)) {
+    uint8_t c;
+    bool ok = m_fifo.get(c);
+    if (!ok)
       return;
-    }
+
+    writeByte(c);
+
+    space -= 4U * IL2P_RADIO_SYMBOL_LENGTH;
   }
-*/
 }
 
 uint8_t CIL2PTX::writeData(const uint8_t* data, uint16_t length)
 {
-/*
-  m_poLen    = 0U;
-  m_poPtr    = 0U;
-  m_tablePtr = 0U;
+  uint16_t space = m_fifo.getSpace();
+  if (space < (length + IL2P_SYNC_LENGTH_BYTES))
+    return 5U;
 
-  // Add TX delay
-  for (uint16_t i = 0U; i < m_txDelay; i++, m_poLen++) {
-    bool preamble = NRZI(false);
-    WRITE_BIT1(m_poBuffer, m_poLen, preamble);
+  // Add the preamble symbols
+  if (!m_tx) {
+    for (uint16_t i = 0U; i < m_txDelay; i++)
+      m_fifo.put(IL2P_PREAMBLE_BYTE);
   }
 
-  // Add the Start Flag
-  for (uint16_t i = 0U; i < 8U; i++, m_poLen++) {
-    bool b1 = READ_BIT1(START_FLAG, i) != 0U;
-    bool b2 = NRZI(b1);
-    WRITE_BIT1(m_poBuffer, m_poLen, b2);
-  }
+  // Add the IL2P sync vector
+  for (uint8_t i = 0U; i < IL2P_SYNC_LENGTH_BYTES; i++)
+    m_fifo.put(IL2P_SYNC_BYTES[i]);
 
-  uint8_t ones = 0U;
-  for (uint16_t i = 0U; i < (frame.m_length * 8U); i++) {
-    bool b1 = READ_BIT2(frame.m_data, i) != 0U;
-    bool b2 = NRZI(b1);
-    WRITE_BIT1(m_poBuffer, m_poLen, b2);
-    m_poLen++;
+  uint8_t buffer[1500U];
+  uint16_t len = m_frame.process(data, length, buffer);
 
-    if (b1) {
-      ones++;
-      if (ones == AX25_MAX_ONES) {
-        // Bit stuffing
-        bool b = NRZI(false);
-        WRITE_BIT1(m_poBuffer, m_poLen, b);
-        m_poLen++;
-        ones = 0U;
-      }
-    } else {
-      ones = 0U;
-    }
-  }
-*/
+  for (uint16_t i = 0U; i < len; i++)
+    m_fifo.put(buffer[i]);
+
   return 0U;
 }
 
@@ -128,34 +124,46 @@ uint8_t CIL2PTX::writeDataAck(uint16_t token, const uint8_t* data, uint16_t leng
   return writeData(data, length);
 }
 
-void CIL2PTX::writeBit(bool b)
+void CIL2PTX::writeByte(uint8_t c)
 {
-/*
-  q15_t buffer[AX25_RADIO_SYMBOL_LENGTH];
-  for (uint8_t i = 0U; i < AX25_RADIO_SYMBOL_LENGTH; i++) {
-    q15_t value = AUDIO_TABLE_DATA[m_tablePtr];
+  q15_t inBuffer[4U];
 
-    if (b) {
-      // De-emphasise the lower frequency by 6dB
-      value >>= 2;
-      m_tablePtr += 6U;
-    } else {
-      m_tablePtr += 11U;
+  const uint8_t MASK = 0xC0U;
+
+  for (uint8_t i = 0U; i < 4U; i++, c <<= 2) {
+    q15_t value = 0;
+
+    switch (c & MASK) {
+      case 0xC0U:
+        value = LEVELA;
+        break;
+      case 0x80U:
+        value = LEVELB;
+        break;
+      case 0x00U:
+        value = LEVELC;
+        break;
+      default:
+        value = LEVELD;
+        break;
     }
 
-    buffer[i] = value >> 1;
-
     q31_t res = value * m_level;
-    buffer[i] = q15_t(__SSAT((res >> 15), 16));
 
-    if (m_tablePtr >= AUDIO_TABLE_LEN)
-      m_tablePtr -= AUDIO_TABLE_LEN;
+    inBuffer[i] = q15_t(__SSAT((res >> 15), 16));
   }
 
-  io.write(buffer, AX25_RADIO_SYMBOL_LENGTH);
-*/
+  q15_t outBuffer[IL2P_RADIO_SYMBOL_LENGTH * 4U];
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
+
+  io.write(outBuffer, IL2P_RADIO_SYMBOL_LENGTH * 4U);
 }
 
+void CIL2PTX::setTXDelay(uint8_t value)
+{
+  m_txDelay = value * 48U;
+}
+  
 void CIL2PTX::setLevel(uint8_t value)
 {
   m_level = q15_t(value * 128);
@@ -163,6 +171,6 @@ void CIL2PTX::setLevel(uint8_t value)
   
 uint8_t CIL2PTX::getSpace() const
 {
-  return m_poLen == 0U ? 255U : 0U;
+  return m_fifo.getSpace() / 300U;
 }
 

@@ -22,7 +22,6 @@
 
 // Global variables
 bool m_duplex       = false;
-uint16_t m_txDelay  = (TX_DELAY / 10U) * 12U;
 uint32_t m_slotTime = (SLOT_TIME / 10U) * 240U;
 uint8_t  m_pPersist = P_PERSISTENCE;
 

@@ -17,6 +17,8 @@
  */
 
 #include "Config.h"
+
+#include "IL2PDefines.h"
 #include "Globals.h"
 #include "IL2PRX.h"
 

@@ -65,7 +65,6 @@ const uint16_t TX_BUFFER_LEN = 4000U;
 extern uint8_t m_mode;
 
 extern bool     m_duplex;
-extern uint16_t m_txDelay;
 extern uint32_t m_slotTime;
 extern uint8_t  m_pPersist;
 

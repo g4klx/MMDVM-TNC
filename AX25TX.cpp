@@ -56,6 +56,7 @@ m_poPtr(0U),
 m_tablePtr(0U),
 m_nrzi(false),
 m_level(MODE1_TX_LEVEL * 128),
+m_txDelay((TX_DELAY / 10U) * 12U),
 m_tokens()
 {
 }
@@ -180,6 +181,11 @@ void CAX25TX::writeBit(bool b)
   io.write(buffer, AX25_RADIO_SYMBOL_LENGTH);
 }
 
+void CAX25TX::setTXDelay(uint8_t value)
+{
+  m_txDelay = value * 12U;
+}
+  
 void CAX25TX::setLevel(uint8_t value)
 {
   m_level = q15_t(value * 128);
