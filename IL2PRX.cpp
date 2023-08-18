@@ -20,7 +20,15 @@
 #include "Globals.h"
 #include "IL2PRX.h"
 
+// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
+static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
+                                 11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
+                                 -553, -847, -731, -340, 104, 401, 0};
+const uint16_t RRC_0_2_FILTER_LEN = 42U;
+
 CIL2PRX::CIL2PRX() :
+m_rrc02Filter(),
+m_rrc02State(),
 m_frame(),
 m_slotCount(0U),
 m_dcd(false),
@@ -30,17 +38,22 @@ m_a(0xB7U),
 m_b(0x73U),
 m_c(0xF6U)
 {
+  ::memset(m_rrc02State, 0x00U, 70U * sizeof(q15_t));
+  m_rrc02Filter.numTaps = RRC_0_2_FILTER_LEN;
+  m_rrc02Filter.pState  = m_rrc02State;
+  m_rrc02Filter.pCoeffs = RRC_0_2_FILTER;
+
   initRand();
 }
 
 void CIL2PRX::samples(q15_t* samples, uint8_t length)
 {
+  q15_t vals[RX_BLOCK_SIZE];
+  ::arm_fir_fast_q15(&m_rrc02Filter, samples, vals, RX_BLOCK_SIZE);
+
 /*
   q15_t output[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_filter, samples, output, RX_BLOCK_SIZE);
-
-
-  CAX25Frame frame;
 
   bool ret = m_demod1.process(output, length, frame);
   if (ret) {
@@ -76,6 +89,8 @@ void CIL2PRX::samples(q15_t* samples, uint8_t length)
     }
   }
 */
+
+  
 }
 
 bool CIL2PRX::canTX() const

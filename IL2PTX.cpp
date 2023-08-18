@@ -36,7 +36,7 @@ m_frame(false),
 m_poBuffer(),
 m_poLen(0U),
 m_poPtr(0U),
-m_tablePtr(0U),
+m_level(MODE2_TX_LEVEL * 128),
 m_tokens()
 {
 }
@@ -145,6 +145,9 @@ void CIL2PTX::writeBit(bool b)
 
     buffer[i] = value >> 1;
 
+    q31_t res = value * m_level;
+    buffer[i] = q15_t(__SSAT((res >> 15), 16));
+
     if (m_tablePtr >= AUDIO_TABLE_LEN)
       m_tablePtr -= AUDIO_TABLE_LEN;
   }
@@ -153,6 +156,11 @@ void CIL2PTX::writeBit(bool b)
 */
 }
 
+void CIL2PTX::setLevel(uint8_t value)
+{
+  m_level = q15_t(value * 128);
+}
+  
 uint8_t CIL2PTX::getSpace() const
 {
   return m_poLen == 0U ? 255U : 0U;

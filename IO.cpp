@@ -22,34 +22,19 @@
 #include "Globals.h"
 #include "IO.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                 11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                 -553, -847, -731, -340, 104, 401, 0};
-const uint16_t RRC_0_2_FILTER_LEN = 42U;
-
 const uint16_t DC_OFFSET = 2048U;
 
 CIO::CIO() :
 m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
-m_rrc02Filter1(),
-m_rrc02State1(),
-m_rxLevel(128 * 128),
-m_mode1TXLevel(128 * 128),
-m_mode2TXLevel(128 * 128),
+m_rxLevel(RX_LEVEL * 128),
 m_ledCount(0U),
 m_ledValue(true),
 m_detect(false),
 m_adcOverflow(0U),
 m_dacOverflow(0U)
 {
-  ::memset(m_rrc02State1, 0x00U, 70U * sizeof(q15_t));
-  m_rrc02Filter1.numTaps = RRC_0_2_FILTER_LEN;
-  m_rrc02Filter1.pState  = m_rrc02State1;
-  m_rrc02Filter1.pCoeffs = RRC_0_2_FILTER;
-
   initInt();
   
   selfTest();
@@ -166,11 +151,8 @@ void CIO::process()
         ax25RX.samples(samples, RX_BLOCK_SIZE);
         break;
 
-      case 2U: {
-          q15_t vals[RX_BLOCK_SIZE];
-          ::arm_fir_fast_q15(&m_rrc02Filter1, samples, vals, RX_BLOCK_SIZE);
-          il2pRX.samples(vals, RX_BLOCK_SIZE);
-        }
+      case 2U:
+        il2pRX.samples(samples, RX_BLOCK_SIZE);
         break;
     }
   }
@@ -188,26 +170,14 @@ void CIO::write(q15_t* samples, uint16_t length)
     DEBUG1("TX ON");
   }
 
-  q15_t txLevel = 0;
-  switch (m_mode) {
-    case 1U:
-      txLevel = m_mode1TXLevel;
-      break;
-    case 2U:
-      txLevel = m_mode2TXLevel;
-      break;
-  }
-
   for (uint16_t i = 0U; i < length; i++) {
-    q31_t res1 = samples[i] * txLevel;
-    q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    uint16_t res3 = uint16_t(res2 + DC_OFFSET);
+    uint16_t res = uint16_t(samples[i] + DC_OFFSET);
 
     // Detect DAC overflow
-    if (res3 > 4095U)
+    if (res > 4095U)
       m_dacOverflow++;
 
-    m_txBuffer.put(res3);
+    m_txBuffer.put(res);
   }
 }
 
@@ -245,7 +215,7 @@ uint16_t CIO::getSpace() const
 void CIO::setDecode(bool dcd)
 {
   if (dcd != m_dcd)
-    setCOSInt(dcd ? true : false);
+    setCOSInt(dcd);
 
   m_dcd = dcd;
 }
@@ -255,11 +225,9 @@ void CIO::setADCDetection(bool detect)
   m_detect = detect;
 }
 
-void CIO::setParameters(uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel)
+void CIO::setParameters(uint8_t rxLevel)
 {
-  m_rxLevel      = q15_t(rxLevel * 128);
-  m_mode1TXLevel = q15_t(mode1TXLevel * 128);
-  m_mode2TXLevel = q15_t(mode2TXLevel * 128);
+  m_rxLevel = q15_t(rxLevel * 128);
 }
 
 void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)

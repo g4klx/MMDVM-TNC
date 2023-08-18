@@ -34,6 +34,8 @@ public:
 
   void process();
 
+  void setLevel(uint8_t value);
+
   uint8_t getSpace() const;
 
 private:
@@ -41,7 +43,7 @@ private:
   uint8_t      m_poBuffer[600U];
   uint16_t     m_poLen;
   uint16_t     m_poPtr;
-  uint16_t     m_tablePtr;
+  q15_t        m_level;
   std::vector<uint16_t> m_tokens;
 
   void writeBit(bool b);

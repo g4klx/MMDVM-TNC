@@ -166,7 +166,9 @@ void CSerialPort::processMessage()
         io.showMode();
         DEBUG2("Setting Mode to", m_buffer[1U]);
       } else if (m_ptr == 4U) {
-        io.setParameters(m_buffer[1U], m_buffer[2U], m_buffer[3U]);
+        io.setParameters(m_buffer[1U]);
+        ax25TX.setLevel(m_buffer[2]);
+        il2pTX.setLevel(m_buffer[3]);
         DEBUG2("Setting RX Level to", m_buffer[1U]);
         DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
         DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);

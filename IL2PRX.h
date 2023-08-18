@@ -32,14 +32,17 @@ public:
   bool canTX() const;
 
 private:
-  CIL2PRXFrame m_frame;
-  uint32_t     m_slotCount;
-  bool         m_dcd;
-  bool         m_canTX;
-  uint8_t      m_x;
-  uint8_t      m_a;
-  uint8_t      m_b;
-  uint8_t      m_c;
+
+  arm_fir_instance_q15 m_rrc02Filter;
+  q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  CIL2PRXFrame         m_frame;
+  uint32_t             m_slotCount;
+  bool                 m_dcd;
+  bool                 m_canTX;
+  uint8_t              m_x;
+  uint8_t              m_a;
+  uint8_t              m_b;
+  uint8_t              m_c;
 
   void initRand();
   uint8_t rand();

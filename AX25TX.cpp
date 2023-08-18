@@ -55,6 +55,7 @@ m_poLen(0U),
 m_poPtr(0U),
 m_tablePtr(0U),
 m_nrzi(false),
+m_level(MODE1_TX_LEVEL * 128),
 m_tokens()
 {
 }
@@ -169,7 +170,8 @@ void CAX25TX::writeBit(bool b)
       m_tablePtr += 11U;
     }
 
-    buffer[i] = value >> 1;
+    q31_t res = (value >> 1) * m_level;
+    buffer[i] = q15_t(__SSAT((res >> 15), 16));
 
     if (m_tablePtr >= AUDIO_TABLE_LEN)
       m_tablePtr -= AUDIO_TABLE_LEN;
@@ -178,6 +180,11 @@ void CAX25TX::writeBit(bool b)
   io.write(buffer, AX25_RADIO_SYMBOL_LENGTH);
 }
 
+void CAX25TX::setLevel(uint8_t value)
+{
+  m_level = q15_t(value * 128);
+}
+  
 uint8_t CAX25TX::getSpace() const
 {
   return m_poLen == 0U ? 255U : 0U;

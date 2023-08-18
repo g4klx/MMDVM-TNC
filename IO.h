@@ -43,7 +43,7 @@ public:
   
   void interrupt();
 
-  void setParameters(uint8_t rxLevel, uint8_t mode1TXLevel, uint8_t mode2TXLevel);
+  void setParameters(uint8_t rxLevel);
 
   void getOverflow(bool& adcOverflow, bool& dacOverflow);
 
@@ -62,13 +62,7 @@ private:
   CRingBuffer<uint16_t>  m_rxBuffer;
   CRingBuffer<uint16_t>  m_txBuffer;
 
-  arm_fir_instance_q15   m_rrc02Filter1;
-  q15_t                  m_rrc02State1[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-
   q15_t                  m_rxLevel;
-
-  q15_t                  m_mode1TXLevel;
-  q15_t                  m_mode2TXLevel;
 
   uint32_t               m_ledCount;
   bool                   m_ledValue;
