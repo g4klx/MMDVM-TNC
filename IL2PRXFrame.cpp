@@ -54,6 +54,7 @@ m_rs4(4U),
 m_rs6(6U),
 m_rs8(8U),
 m_rs16(16U),
+m_headerByteCount(0U),
 m_payloadByteCount(0U),
 m_payloadOffset(0U),
 m_payloadBlockCount(0U),
@@ -61,7 +62,8 @@ m_smallBlockSize(0U),
 m_largeBlockSize(0U),
 m_largeBlockCount(0U),
 m_smallBlockCount(0U),
-m_paritySymbolsPerBlock(0U)
+m_paritySymbolsPerBlock(0U),
+m_outOffset(0U)
 {
 }
 
@@ -69,61 +71,75 @@ CIL2PRXFrame::~CIL2PRXFrame()
 {
 }
 
-uint16_t CIL2PRXFrame::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
+bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
 {
   uint8_t buffer[20U];
   ::memcpy(buffer, in, IL2P_HDR_LENGTH + 2U);
   bool ok = decode(buffer, IL2P_HDR_LENGTH, 2U);
   if (!ok)
-    return 0U;
+    return false;
 
   unscramble(buffer, IL2P_HDR_LENGTH);
 
-  uint8_t len = 0U;
   bool type1 = (buffer[1U] & 0x80U) == 0x80U;
   if (type1)
-    len = processType1Header(buffer, inLength, out);
+    processType1Header(buffer, out);
   else
-    len = processType0Header(buffer, inLength, out);
+    processType0Header(buffer, out);
 
-  if (m_payloadByteCount > 1500U)
-    return 0U;
+  // Sanity check
+  if (m_payloadByteCount > 1023U)
+    return false;
 
   bool maxFEC = (buffer[0U] & 0x80U) == 0x80U;
 
+  m_outOffset = m_headerByteCount;
   m_payloadOffset = IL2P_HDR_LENGTH + 2U;
 
   calculatePayloadBlockSize(maxFEC);
 
-  uint16_t outLength = len;
+  return true;
+}
 
+bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
+{
   for (uint8_t i = 0U; i < m_largeBlockCount; i++) {
-    ::memcpy(out + outLength, in + m_payloadOffset, m_largeBlockSize + m_paritySymbolsPerBlock);
-    ok = decode(out + outLength, m_largeBlockSize, m_paritySymbolsPerBlock);
+    ::memcpy(out + m_outOffset, in + m_payloadOffset, m_largeBlockSize + m_paritySymbolsPerBlock);
+    bool ok = decode(out + m_outOffset, m_largeBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
-      return 0U;
+      return false;
 
-    unscramble(out + outLength, m_largeBlockSize);
+    unscramble(out + m_outOffset, m_largeBlockSize);
 
     m_payloadByteCount -= m_largeBlockSize;
     m_payloadOffset    += m_largeBlockSize + m_paritySymbolsPerBlock;
-    outLength          += m_largeBlockSize;
+    m_outOffset        += m_largeBlockSize;
   }
 
   for (uint8_t i = 0U; i < m_smallBlockCount; i++) {
-    ::memcpy(out + outLength, in + m_payloadOffset, m_smallBlockSize + m_paritySymbolsPerBlock);
-    ok = decode(out + outLength, m_smallBlockSize, m_paritySymbolsPerBlock);
+    ::memcpy(out + m_outOffset, in + m_payloadOffset, m_smallBlockSize + m_paritySymbolsPerBlock);
+    bool ok = decode(out + m_outOffset, m_smallBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
-      return 0U;
+      return false;
 
-    unscramble(out + outLength, m_smallBlockSize);
+    unscramble(out + m_outOffset, m_smallBlockSize);
 
     m_payloadByteCount -= m_smallBlockSize;
     m_payloadOffset    += m_smallBlockSize + m_paritySymbolsPerBlock;
-    outLength          += m_smallBlockSize;
+    m_outOffset        += m_smallBlockSize;
   }
 
-  return outLength;
+  return true;
+}
+
+uint16_t CIL2PRXFrame::getHeaderLength() const
+{
+  return m_headerByteCount;
+}
+
+uint16_t CIL2PRXFrame::getPayloadLength() const
+{
+  return m_payloadByteCount;
 }
 
 void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
@@ -163,8 +179,9 @@ void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
   }
 }
 
-uint8_t CIL2PRXFrame::processType0Header(const uint8_t* in, uint16_t inLength, uint8_t* out)
+void CIL2PRXFrame::processType0Header(const uint8_t* in, uint8_t* out)
 {
+  m_headerByteCount  = 0U;
   m_payloadByteCount = 0U;
 
   m_payloadByteCount |= (in[2U]  & 0x80U) == 0x80U ? 0x0200U : 0x0000U;
@@ -177,11 +194,9 @@ uint8_t CIL2PRXFrame::processType0Header(const uint8_t* in, uint16_t inLength, u
   m_payloadByteCount |= (in[9U]  & 0x80U) == 0x80U ? 0x0004U : 0x0000U;
   m_payloadByteCount |= (in[10U] & 0x80U) == 0x80U ? 0x0002U : 0x0000U;
   m_payloadByteCount |= (in[11U] & 0x80U) == 0x80U ? 0x0001U : 0x0000U;
-
-  return 0U;
 }
 
-uint8_t CIL2PRXFrame::processType1Header(const uint8_t* in, uint16_t inLength, uint8_t* out)
+void CIL2PRXFrame::processType1Header(const uint8_t* in, uint8_t* out)
 {
   m_payloadByteCount = 0U;
 
@@ -320,7 +335,7 @@ uint8_t CIL2PRXFrame::processType1Header(const uint8_t* in, uint16_t inLength, u
     m_payloadByteCount |= (in[11U] & 0x80U) == 0x80U ? 0x0001U : 0x0000U;
   }
 
-  return hasPID ? 16U : 15U;
+  m_headerByteCount = hasPID ? 16U : 15U;
 }
 
 void CIL2PRXFrame::unscramble(uint8_t* buffer, uint16_t length) const

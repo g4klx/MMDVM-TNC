@@ -28,7 +28,11 @@ public:
   CIL2PRXFrame();
   ~CIL2PRXFrame();
 
-  uint16_t process(const uint8_t* in, uint16_t inLength, uint8_t* out);
+  bool processHeader(const uint8_t* in, uint8_t* out);
+  bool processPayload(const uint8_t* in, uint8_t* out);
+
+  uint16_t getHeaderLength() const;
+  uint16_t getPayloadLength() const;
 
 private:
   CIL2PRS  m_rs2;
@@ -36,6 +40,7 @@ private:
   CIL2PRS  m_rs6;
   CIL2PRS  m_rs8;
   CIL2PRS  m_rs16;
+  uint16_t m_headerByteCount;
   uint16_t m_payloadByteCount;
   uint16_t m_payloadOffset;
   uint8_t  m_payloadBlockCount;
@@ -44,11 +49,12 @@ private:
   uint8_t  m_largeBlockCount;
   uint8_t  m_smallBlockCount;
   uint8_t  m_paritySymbolsPerBlock;
+  uint16_t m_outOffset;
 
   void calculatePayloadBlockSize(bool max);
 
-  uint8_t processType0Header(const uint8_t* in, uint16_t inLength, uint8_t* out);
-  uint8_t processType1Header(const uint8_t* in, uint16_t inLength, uint8_t* out);
+  void processType0Header(const uint8_t* in, uint8_t* out);
+  void processType1Header(const uint8_t* in, uint8_t* out);
 
   void unscramble(uint8_t* buffer, uint16_t length) const;
 
