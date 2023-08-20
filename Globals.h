@@ -69,7 +69,6 @@ extern uint32_t m_slotTime;
 extern uint8_t  m_pPersist;
 
 extern bool m_tx;
-extern bool m_dcd;
 
 extern CSerialPort serial;
 extern CIO io;

@@ -27,8 +27,7 @@ uint8_t  m_pPersist = P_PERSISTENCE;
 
 uint8_t m_mode = INITIAL_MODE;
 
-bool m_tx  = false;
-bool m_dcd = false;
+bool m_tx = false;
 
 CAX25RX ax25RX;
 CAX25TX ax25TX;

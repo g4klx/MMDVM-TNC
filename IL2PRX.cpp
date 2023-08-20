@@ -18,9 +18,10 @@
 
 #include "Config.h"
 
-#include "IL2PDefines.h"
+#include "KISSDefines.h"
 #include "Globals.h"
 #include "IL2PRX.h"
+#include "Utils.h"
 
 // Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
 static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
@@ -28,10 +29,37 @@ static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 147
                                  -553, -847, -731, -340, 104, 401, 0};
 const uint16_t RRC_0_2_FILTER_LEN = 42U;
 
+const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
+
+const uint8_t MAX_SYNC_BIT_ERRS     = 2U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 3U;
+
+const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
+
+#define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
+
+const uint8_t  NOAVEPTR = 99U;
+const uint16_t NOENDPTR = 9999U;
+
 CIL2PRX::CIL2PRX() :
+m_state(IL2PRXS_NONE),
 m_rrc02Filter(),
 m_rrc02State(),
+m_bitBuffer(),
+m_buffer(),
+m_bitPtr(0U),
+m_dataPtr(0U),
+m_startPtr(NOENDPTR),
+m_endPtr(NOENDPTR),
+m_syncPtr(NOENDPTR),
+m_invert(false),
 m_frame(),
+m_maxCorr(0),
+m_centre(),
+m_centreVal(0),
+m_threshold(),
+m_thresholdVal(0),
+m_countdown(0U),
 m_slotCount(0U),
 m_dcd(false),
 m_canTX(false),
@@ -53,46 +81,355 @@ void CIL2PRX::samples(q15_t* samples, uint8_t length)
   q15_t vals[RX_BLOCK_SIZE];
   ::arm_fir_fast_q15(&m_rrc02Filter, samples, vals, RX_BLOCK_SIZE);
 
-/*
-  q15_t output[RX_BLOCK_SIZE];
-  ::arm_fir_fast_q15(&m_filter, samples, output, RX_BLOCK_SIZE);
+  for (uint8_t i = 0U; i < length; i++) {
+    q15_t sample = vals[i];
 
-  bool ret = m_demod1.process(output, length, frame);
-  if (ret) {
-    if (frame.m_fcs != m_lastFCS || m_count > 2U) {
-      m_lastFCS = frame.m_fcs;
-      m_count   = 0U;
-      serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
+    m_bitBuffer[m_bitPtr] <<= 1;
+    if (sample < 0)
+      m_bitBuffer[m_bitPtr] |= 0x01U;
+
+    m_buffer[m_dataPtr] = sample;
+
+    switch (m_state) {
+    case IL2PRXS_HEADER:
+      processHeader(sample);
+      break;
+    case IL2PRXS_PAYLOAD:
+      processPayload(sample);
+      break;
+    default:
+      processNone(sample);
+      break;
     }
-    DEBUG1("Decoder 1 reported");
+
+    m_dataPtr++;
+    if (m_dataPtr >= IL2P_MAX_LENGTH_SAMPLES)
+      m_dataPtr = 0U;
+
+    m_bitPtr++;
+    if (m_bitPtr >= IL2P_RADIO_SYMBOL_LENGTH)
+      m_bitPtr = 0U;
   }
 
   m_slotCount += RX_BLOCK_SIZE;
   if (m_slotCount >= m_slotTime) {
     m_slotCount = 0U;
 
-    bool dcd = m_demod1.isDCD();
-    if (dcd) {
-      if (!m_dcd) {
-        io.setDecode(true);
-        io.setADCDetection(true);
-        m_dcd = true;
-      }
-
+    if (m_dcd)
       m_canTX = false;
-    } else {
-      if (m_dcd) {
+    else
+      m_canTX = m_pPersist >= rand();
+  }
+}
+
+void CIL2PRX::processNone(q15_t sample)
+{
+  bool ret = correlateSync();
+  if (ret) {
+    // On the first sync, start the countdown to the state change
+    if (m_countdown == 0U) {
+      io.setDecode(true);
+      io.setADCDetection(true);
+      m_dcd = true;
+
+      m_averagePtr = NOAVEPTR;
+
+      m_countdown = 5U;
+    }
+  }
+
+  if (m_countdown > 0U)
+    m_countdown--;
+
+  if (m_countdown == 1U) {
+    DEBUG4("IL2PRX: sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+
+    m_state     = IL2PRXS_HEADER;
+    m_countdown = 0U;
+  }
+}
+
+void CIL2PRX::processHeader(q15_t sample)
+{
+  if (m_dataPtr == m_endPtr) {
+    calculateLevels(m_startPtr, IL2P_HEADER_LENGTH_SYMBOLS + (2U * 4U));
+
+    uint8_t frame[IL2P_HEADER_LENGTH_BYTES + 2U];
+    samplesToBits(m_startPtr, IL2P_HEADER_LENGTH_SYMBOLS + (2U * 4U), frame, 8U, m_centreVal, m_thresholdVal);
+
+    uint8_t header[16U];
+    bool ok = m_frame.processHeader(frame, header);
+    if (ok) {
+      uint16_t length = m_frame.getPayloadLength();
+      if (length > 0U) {
+        DEBUG2("IL2PRX: header is valid and has a payload: ", length);
+
+        m_state = IL2PRXS_PAYLOAD;
+
+        length += m_frame.getPayloadParityLength();
+
+        m_startPtr = m_endPtr + IL2P_RADIO_SYMBOL_LENGTH;
+        if (m_startPtr >= IL2P_MAX_LENGTH_SAMPLES)
+          m_startPtr -= IL2P_MAX_LENGTH_SAMPLES;
+
+        m_endPtr = m_startPtr + (length * IL2P_RADIO_SYMBOL_LENGTH);
+        if (m_endPtr >= IL2P_MAX_LENGTH_SAMPLES)
+          m_endPtr -= IL2P_MAX_LENGTH_SAMPLES;
+      } else {
+        DEBUG1("IL2PRX: header is valid but no payload");
+
+        serial.writeKISSData(KISS_TYPE_DATA, header, length);
+
         io.setDecode(false);
         io.setADCDetection(false);
         m_dcd = false;
-      }
 
-      m_canTX = m_pPersist >= rand();
+        m_state      = IL2PRXS_NONE;
+        m_endPtr     = NOENDPTR;
+        m_averagePtr = NOAVEPTR;
+        m_countdown  = 0U;
+        m_maxCorr    = 0;
+      }
+    } else {
+      DEBUG1("IL2PRX: header is invalid");
+
+      io.setDecode(false);
+      io.setADCDetection(false);
+      m_dcd = false;
+
+      m_state      = IL2PRXS_NONE;
+      m_endPtr     = NOENDPTR;
+      m_averagePtr = NOAVEPTR;
+      m_countdown  = 0U;
+      m_maxCorr    = 0;
     }
   }
-*/
+}
 
-  
+void CIL2PRX::processPayload(q15_t sample)
+{
+  if (m_dataPtr == m_endPtr) {
+    uint16_t payloadLength = m_frame.getPayloadLength();
+    uint16_t overallLength = payloadLength + m_frame.getPayloadParityLength();
+
+    calculateLevels(m_startPtr, overallLength * IL2P_RADIO_SYMBOL_LENGTH);
+
+    uint8_t frame[IL2P_HEADER_LENGTH_BYTES + 2U + 1023U + (5U * 16U)];
+    samplesToBits(m_startPtr, overallLength * IL2P_RADIO_SYMBOL_LENGTH, frame, 8U, m_centreVal, m_thresholdVal);
+
+    uint8_t payload[16U + 1023U];
+    bool ok = m_frame.processPayload(frame, payload);
+    if (ok) {
+      DEBUG1("IL2PRX: payload is valid");
+
+      serial.writeKISSData(KISS_TYPE_DATA, payload, payloadLength);
+
+      io.setDecode(false);
+      io.setADCDetection(false);
+      m_dcd = false;
+
+      m_state      = IL2PRXS_NONE;
+      m_endPtr     = NOENDPTR;
+      m_averagePtr = NOAVEPTR;
+      m_countdown  = 0U;
+      m_maxCorr    = 0;
+    } else {
+      DEBUG1("IL2PRX: payload is invalid");
+
+      io.setDecode(false);
+      io.setADCDetection(false);
+      m_dcd = false;
+
+      m_state      = IL2PRXS_NONE;
+      m_endPtr     = NOENDPTR;
+      m_averagePtr = NOAVEPTR;
+      m_countdown  = 0U;
+      m_maxCorr    = 0;
+    }
+  }
+}
+
+bool CIL2PRX::correlateSync()
+{
+  if (countBits32((m_bitBuffer[m_bitPtr] & IL2P_SYNC_SYMBOLS_MASK) ^ IL2P_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) {
+    uint16_t ptr = m_dataPtr + IL2P_MAX_LENGTH_SAMPLES - IL2P_SYNC_LENGTH_SAMPLES + IL2P_RADIO_SYMBOL_LENGTH;
+    if (ptr >= IL2P_MAX_LENGTH_SAMPLES)
+      ptr -= IL2P_MAX_LENGTH_SAMPLES;
+
+    q31_t corr1 = 0;
+    q31_t corr2 = 0;
+    q15_t min   =  16000;
+    q15_t max   = -16000;
+
+    for (uint8_t i = 0U; i < IL2P_SYNC_LENGTH_SYMBOLS; i++) {
+      q15_t val = m_buffer[ptr];
+
+      if (val > max)
+        max = val;
+      if (val < min)
+        min = val;
+
+      switch (IL2P_SYNC_SYMBOLS_VALUES[i]) {
+      case +3:
+        corr1 -= (val + val + val);
+        corr2 += (val + val + val);
+        break;
+      case +1:
+        corr1 -= val;
+        corr2 += val;
+        break;
+      case -1:
+        corr1 += val;
+        corr2 -= val;
+        break;
+      default:  // -3
+        corr1 += (val + val + val);
+        corr2 -= (val + val + val);
+        break;
+      }
+
+      ptr += IL2P_RADIO_SYMBOL_LENGTH;
+      if (ptr >= IL2P_MAX_LENGTH_SAMPLES)
+        ptr -= IL2P_MAX_LENGTH_SAMPLES;
+    }
+
+    if ((corr1 > m_maxCorr) || (corr2 > m_maxCorr)) {
+      if (m_averagePtr == NOAVEPTR) {
+        m_centreVal = (max + min) >> 1;
+
+        q31_t v1 = (max - m_centreVal) * SCALING_FACTOR;
+        m_thresholdVal = q15_t(v1 >> 15);
+      }
+
+      m_invert = (corr2 > m_maxCorr);
+
+      uint16_t startPtr = m_dataPtr + IL2P_MAX_LENGTH_SAMPLES - IL2P_SYNC_LENGTH_SAMPLES + IL2P_RADIO_SYMBOL_LENGTH;
+      if (startPtr >= IL2P_MAX_LENGTH_SAMPLES)
+        startPtr -= IL2P_MAX_LENGTH_SAMPLES;
+
+      uint8_t sync[IL2P_SYNC_LENGTH_BYTES];
+      samplesToBits(startPtr, IL2P_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+
+      uint8_t errs = 0U;
+      for (uint8_t i = 0U; i < IL2P_SYNC_LENGTH_BYTES; i++)
+        errs += countBits8(sync[i] ^ IL2P_SYNC_BYTES[i]);
+
+      if (errs <= MAX_SYNC_BIT_ERRS) {
+        m_maxCorr = (corr1 > corr2) ? corr1 : corr2;
+        m_syncPtr = m_dataPtr;
+
+        // The header starts right after the sync vector
+        m_startPtr = m_dataPtr + IL2P_RADIO_SYMBOL_LENGTH;
+        if (m_startPtr >= IL2P_MAX_LENGTH_SAMPLES)
+          m_startPtr -= IL2P_MAX_LENGTH_SAMPLES;
+
+        m_endPtr = m_startPtr + IL2P_HEADER_LENGTH_SAMPLES + (2U * 4U);
+        if (m_endPtr >= IL2P_MAX_LENGTH_SAMPLES)
+          m_endPtr -= IL2P_MAX_LENGTH_SAMPLES;
+
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void CIL2PRX::calculateLevels(uint16_t start, uint16_t count)
+{
+  q15_t maxPos = -16000;
+  q15_t minPos =  16000;
+  q15_t maxNeg =  16000;
+  q15_t minNeg = -16000;
+
+  for (uint16_t i = 0U; i < count; i++) {
+    q15_t sample = m_buffer[start];
+
+    if (sample > 0) {
+      if (sample > maxPos)
+        maxPos = sample;
+      if (sample < minPos)
+        minPos = sample;
+    } else {
+      if (sample < maxNeg)
+        maxNeg = sample;
+      if (sample > minNeg)
+        minNeg = sample;
+    }
+
+    start += IL2P_RADIO_SYMBOL_LENGTH;
+    if (start >= IL2P_MAX_LENGTH_SAMPLES)
+      start -= IL2P_MAX_LENGTH_SAMPLES;
+  }
+
+  q15_t posThresh = (maxPos + minPos) >> 1;
+  q15_t negThresh = (maxNeg + minNeg) >> 1;
+
+  q15_t centre = (posThresh + negThresh) >> 1;
+
+  q15_t threshold = posThresh - centre;
+
+  DEBUG5("IL2PRX: pos/neg/centre/threshold", posThresh, negThresh, centre, threshold);
+
+  if (m_averagePtr == NOAVEPTR) {
+    for (uint8_t i = 0U; i < 16U; i++) {
+      m_centre[i] = centre;
+      m_threshold[i] = threshold;
+    }
+
+    m_averagePtr = 0U;
+  } else {
+    m_centre[m_averagePtr] = centre;
+    m_threshold[m_averagePtr] = threshold;
+
+    m_averagePtr++;
+    if (m_averagePtr >= 16U)
+      m_averagePtr = 0U;
+  }
+
+  m_centreVal = 0;
+  m_thresholdVal = 0;
+
+  for (uint8_t i = 0U; i < 16U; i++) {
+    m_centreVal += m_centre[i];
+    m_thresholdVal += m_threshold[i];
+  }
+
+  m_centreVal >>= 4;
+  m_thresholdVal >>= 4;
+}
+
+void CIL2PRX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
+{
+  for (uint16_t i = 0U; i < count; i++) {
+    q15_t sample = m_buffer[start] - centre;
+
+    if (sample < -threshold) {
+      WRITE_BIT1(buffer, offset, !m_invert);
+      offset++;
+      WRITE_BIT1(buffer, offset, m_invert);
+      offset++;
+    } else if (sample < 0) {
+      WRITE_BIT1(buffer, offset, !m_invert);
+      offset++;
+      WRITE_BIT1(buffer, offset, !m_invert);
+      offset++;
+    } else if (sample < threshold) {
+      WRITE_BIT1(buffer, offset, m_invert);
+      offset++;
+      WRITE_BIT1(buffer, offset, !m_invert);
+      offset++;
+    } else {
+      WRITE_BIT1(buffer, offset, m_invert);
+      offset++;
+      WRITE_BIT1(buffer, offset, m_invert);
+      offset++;
+    }
+
+    start += IL2P_RADIO_SYMBOL_LENGTH;
+    if (start >= IL2P_MAX_LENGTH_SAMPLES)
+      start -= IL2P_MAX_LENGTH_SAMPLES;
+  }
 }
 
 bool CIL2PRX::canTX() const

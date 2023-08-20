@@ -142,6 +142,16 @@ uint16_t CIL2PRXFrame::getPayloadLength() const
   return m_payloadByteCount;
 }
 
+uint16_t CIL2PRXFrame::getHeaderParityLength() const
+{
+  return 2U;
+}
+
+uint16_t CIL2PRXFrame::getPayloadParityLength() const
+{
+  return m_paritySymbolsPerBlock * (m_largeBlockCount + m_smallBlockCount);
+}
+
 void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
 {
   if (m_payloadByteCount == 0U) {
