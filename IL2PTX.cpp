@@ -49,7 +49,7 @@ m_modFilter(),
 m_modState(),
 m_frame(false),
 m_level(MODE2_TX_LEVEL * 128),
-m_txDelay((TX_DELAY / 10U) * 48U),
+m_txDelay((TX_DELAY / 10U) * 12U),
 m_tokens()
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
@@ -62,12 +62,21 @@ m_tokens()
 
 void CIL2PTX::process()
 {
-  // Nothing to transmit, send the packet tokens back
-  if (!m_tx && m_fifo.getData() == 0U) {
+  if (!m_duplex) {
+    // Nothing left to transmit, send the packet tokens back
+    if (!m_tx && m_fifo.getData() == 0U) {
+      for (const auto& token : m_tokens)
+        serial.writeKISSAck(token);
+      m_tokens.clear();
+      return;
+    }
+  } else {
+    // Send the tokens back immediately as the packets can be transmitted immediately too
     for (const auto& token : m_tokens)
       serial.writeKISSAck(token);
     m_tokens.clear();
-    return;
+    if (m_fifo.getData() == 0U)
+      return;
   }
 
   // Transmit is off but we have data to send
@@ -99,7 +108,7 @@ uint8_t CIL2PTX::writeData(const uint8_t* data, uint16_t length)
     return 5U;
 
   // Add the preamble symbols
-  if (!m_tx) {
+  if (!m_tx && (m_fifo.getData() == 0U)) {
     for (uint16_t i = 0U; i < m_txDelay; i++)
       m_fifo.put(IL2P_PREAMBLE_BYTE);
   }
@@ -113,6 +122,9 @@ uint8_t CIL2PTX::writeData(const uint8_t* data, uint16_t length)
 
   for (uint16_t i = 0U; i < len; i++)
     m_fifo.put(buffer[i]);
+
+  // Flush the transmitter
+  m_fifo.put(IL2P_PREAMBLE_BYTE);
 
   return 0U;
 }
@@ -161,7 +173,7 @@ void CIL2PTX::writeByte(uint8_t c)
 
 void CIL2PTX::setTXDelay(uint8_t value)
 {
-  m_txDelay = value * 48U;
+  m_txDelay = value * 12U;
 }
   
 void CIL2PTX::setLevel(uint8_t value)

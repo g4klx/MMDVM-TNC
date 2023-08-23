@@ -30,11 +30,13 @@ enum IL2PRX_STATE {
   IL2PRXS_PAYLOAD
 };
 
-const uint16_t IL2P_MAX_LENGTH_SAMPLES = (1023U + IL2P_HEADER_LENGTH_BYTES + 2U + 5U * 16U) * 4U;
+const uint16_t IL2P_MAX_LENGTH_SAMPLES = (1023U + IL2P_HEADER_LENGTH_BYTES + IL2P_HEADER_PARITY_BYTES + 5U * 16U) * IL2P_SYMBOLS_PER_BYTE;
 
 class CIL2PRX {
 public:
   CIL2PRX();
+
+  void reset();
 
   void samples(q15_t* samples, uint8_t length);
 
@@ -63,6 +65,7 @@ private:
   uint32_t             m_slotCount;
   bool                 m_dcd;
   bool                 m_canTX;
+  uint8_t              m_packet[1100U];
   uint8_t              m_x;
   uint8_t              m_a;
   uint8_t              m_b;

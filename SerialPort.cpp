@@ -195,7 +195,7 @@ void CSerialPort::processMessage()
 
 void CSerialPort::writeKISSData(uint8_t type, const uint8_t* data, uint16_t length)
 {
-  uint8_t  buffer[512U];
+  uint8_t  buffer[2000U];
   uint16_t pos = 0U;
 
   buffer[pos++] = KISS_FEND;

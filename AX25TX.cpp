@@ -63,11 +63,21 @@ m_tokens()
 
 void CAX25TX::process()
 {
-  if (m_poLen == 0U) {
+  if (!m_duplex) {
+    // Nothing left to transmit, send the packet tokens back
+    if (!m_tx && (m_poLen == 0U)) {
+      for (const auto& token : m_tokens)
+        serial.writeKISSAck(token);
+      m_tokens.clear();
+      return;
+    }
+  } else {
+    // Send the tokens back immediately as the packets can be transmitted immediately too
     for (const auto& token : m_tokens)
       serial.writeKISSAck(token);
     m_tokens.clear();
-    return;
+    if (m_poLen == 0U)
+      return;
   }
 
   if (!m_duplex) {

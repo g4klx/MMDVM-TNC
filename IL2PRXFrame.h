@@ -34,7 +34,6 @@ public:
   uint16_t getHeaderLength() const;
   uint16_t getPayloadLength() const;
 
-  uint16_t getHeaderParityLength() const;
   uint16_t getPayloadParityLength() const;
 
 private:
@@ -45,7 +44,6 @@ private:
   CIL2PRS  m_rs16;
   uint16_t m_headerByteCount;
   uint16_t m_payloadByteCount;
-  uint16_t m_payloadOffset;
   uint8_t  m_payloadBlockCount;
   uint8_t  m_smallBlockSize;
   uint8_t  m_largeBlockSize;

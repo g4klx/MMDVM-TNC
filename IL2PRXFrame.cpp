@@ -56,7 +56,6 @@ m_rs8(8U),
 m_rs16(16U),
 m_headerByteCount(0U),
 m_payloadByteCount(0U),
-m_payloadOffset(0U),
 m_payloadBlockCount(0U),
 m_smallBlockSize(0U),
 m_largeBlockSize(0U),
@@ -94,7 +93,6 @@ bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
   bool maxFEC = (buffer[0U] & 0x80U) == 0x80U;
 
   m_outOffset = m_headerByteCount;
-  m_payloadOffset = IL2P_HDR_LENGTH + 2U;
 
   calculatePayloadBlockSize(maxFEC);
 
@@ -103,8 +101,10 @@ bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
 
 bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
 {
+  uint16_t payloadOffset = 0U;
+
   for (uint8_t i = 0U; i < m_largeBlockCount; i++) {
-    ::memcpy(out + m_outOffset, in + m_payloadOffset, m_largeBlockSize + m_paritySymbolsPerBlock);
+    ::memcpy(out + m_outOffset, in + payloadOffset, m_largeBlockSize + m_paritySymbolsPerBlock);
     bool ok = decode(out + m_outOffset, m_largeBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
       return false;
@@ -112,12 +112,12 @@ bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
     unscramble(out + m_outOffset, m_largeBlockSize);
 
     m_payloadByteCount -= m_largeBlockSize;
-    m_payloadOffset    += m_largeBlockSize + m_paritySymbolsPerBlock;
+    payloadOffset      += m_largeBlockSize + m_paritySymbolsPerBlock;
     m_outOffset        += m_largeBlockSize;
   }
 
   for (uint8_t i = 0U; i < m_smallBlockCount; i++) {
-    ::memcpy(out + m_outOffset, in + m_payloadOffset, m_smallBlockSize + m_paritySymbolsPerBlock);
+    ::memcpy(out + m_outOffset, in + payloadOffset, m_smallBlockSize + m_paritySymbolsPerBlock);
     bool ok = decode(out + m_outOffset, m_smallBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
       return false;
@@ -125,7 +125,7 @@ bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
     unscramble(out + m_outOffset, m_smallBlockSize);
 
     m_payloadByteCount -= m_smallBlockSize;
-    m_payloadOffset    += m_smallBlockSize + m_paritySymbolsPerBlock;
+    payloadOffset      += m_smallBlockSize + m_paritySymbolsPerBlock;
     m_outOffset        += m_smallBlockSize;
   }
 
@@ -140,11 +140,6 @@ uint16_t CIL2PRXFrame::getHeaderLength() const
 uint16_t CIL2PRXFrame::getPayloadLength() const
 {
   return m_payloadByteCount;
-}
-
-uint16_t CIL2PRXFrame::getHeaderParityLength() const
-{
-  return 2U;
 }
 
 uint16_t CIL2PRXFrame::getPayloadParityLength() const
