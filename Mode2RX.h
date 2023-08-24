@@ -75,7 +75,7 @@ private:
   void processPayload(q15_t sample);
   bool correlateSync();
   void calculateLevels(uint16_t start, uint16_t count);
-  void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold);
+  void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer);
 
   void initRand();
   uint8_t rand();

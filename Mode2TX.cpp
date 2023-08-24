@@ -104,8 +104,10 @@ void CMode2TX::process()
 uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
 {
   uint16_t space = m_fifo.getSpace();
-  if (space < (length + MODE2_SYNC_LENGTH_BYTES))
+  if (space < (length + MODE2_SYNC_LENGTH_BYTES)) {
+    DEBUG1("Mode2TX: no space for the packet");
     return 5U;
+  }
 
   // Add the preamble symbols
   if (!m_tx && (m_fifo.getData() == 0U)) {

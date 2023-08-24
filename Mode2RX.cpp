@@ -159,7 +159,7 @@ void CMode2RX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-    DEBUG4("Mode2RX: sync found pos/centre/threshold", m_syncPtr, m_centreVal, m_thresholdVal);
+    DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
 
     m_state     = MODE2RXS_HEADER;
     m_countdown = 0U;
@@ -172,7 +172,7 @@ void CMode2RX::processHeader(q15_t sample)
     calculateLevels(m_startPtr, MODE2_HEADER_LENGTH_SYMBOLS + MODE2_HEADER_PARITY_SYMBOLS + 1U);
 
     uint8_t frame[MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES];
-    samplesToBits(m_startPtr, MODE2_HEADER_LENGTH_SYMBOLS + MODE2_HEADER_PARITY_SYMBOLS + 1U, frame, 0U, m_centreVal, m_thresholdVal);
+    samplesToBits(m_startPtr, MODE2_HEADER_LENGTH_SYMBOLS + MODE2_HEADER_PARITY_SYMBOLS + 1U, frame);
 
     bool ok = m_frame.processHeader(frame, m_packet);
     if (ok) {
@@ -231,7 +231,7 @@ void CMode2RX::processPayload(q15_t sample)
     calculateLevels(m_startPtr, overallLength * MODE2_SYMBOLS_PER_BYTE + 1U);
 
     uint8_t frame[1023U + (5U * 16U)];
-    samplesToBits(m_startPtr, overallLength * MODE2_SYMBOLS_PER_BYTE + 1U, frame, 0U, m_centreVal, m_thresholdVal);
+    samplesToBits(m_startPtr, overallLength * MODE2_SYMBOLS_PER_BYTE + 1U, frame);
 
     bool ok = m_frame.processPayload(frame, m_packet);
     if (ok) {
@@ -265,17 +265,16 @@ void CMode2RX::processPayload(q15_t sample)
 
 bool CMode2RX::correlateSync()
 {
-  if ((countBits32((m_bitBuffer[m_bitPtr] & MODE2_SYNC_SYMBOLS_MASK) ^  MODE2_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS) ||
-      (countBits32((m_bitBuffer[m_bitPtr] & MODE2_SYNC_SYMBOLS_MASK) ^ ~MODE2_SYNC_SYMBOLS) <= MAX_SYNC_SYMBOLS_ERRS)) {
+  if ((countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS) ||
+      (countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS)) {
 
     uint16_t ptr = m_dataPtr + MODE2_MAX_LENGTH_SAMPLES - MODE2_SYNC_LENGTH_SAMPLES + MODE2_RADIO_SYMBOL_LENGTH;
     if (ptr >= MODE2_MAX_LENGTH_SAMPLES)
       ptr -= MODE2_MAX_LENGTH_SAMPLES;
 
-    q31_t corr1 = 0;
-    q31_t corr2 = 0;
-    q15_t min   =  16000;
-    q15_t max   = -16000;
+    q31_t corr = 0;
+    q15_t min  =  16000;
+    q15_t max  = -16000;
 
     for (uint8_t i = 0U; i < MODE2_SYNC_LENGTH_SYMBOLS; i++) {
       q15_t val = m_buffer[ptr];
@@ -287,20 +286,16 @@ bool CMode2RX::correlateSync()
 
       switch (MODE2_SYNC_SYMBOLS_VALUES[i]) {
       case +3:
-        corr1 -= (val + val + val);
-        corr2 += (val + val + val);
+        corr -= (val + val + val);
         break;
       case +1:
-        corr1 -= val;
-        corr2 += val;
+        corr -= val;
         break;
       case -1:
-        corr1 += val;
-        corr2 -= val;
+        corr += val;
         break;
       default:  // -3
-        corr1 += (val + val + val);
-        corr2 -= (val + val + val);
+        corr += (val + val + val);
         break;
       }
 
@@ -309,7 +304,7 @@ bool CMode2RX::correlateSync()
         ptr -= MODE2_MAX_LENGTH_SAMPLES;
     }
 
-    if ((corr1 > m_maxCorr) || (corr2 > m_maxCorr)) {
+    if ((corr > m_maxCorr) || (-corr > m_maxCorr)) {
       if (m_averagePtr == NOAVEPTR) {
         m_centreVal = (max + min) >> 1;
 
@@ -317,21 +312,21 @@ bool CMode2RX::correlateSync()
         m_thresholdVal = q15_t(v1 >> 15);
       }
 
-      m_invert = (corr2 > m_maxCorr);
+      m_invert = (-corr > m_maxCorr);
 
       uint16_t startPtr = m_dataPtr + MODE2_MAX_LENGTH_SAMPLES - MODE2_SYNC_LENGTH_SAMPLES + MODE2_RADIO_SYMBOL_LENGTH;
       if (startPtr >= MODE2_MAX_LENGTH_SAMPLES)
         startPtr -= MODE2_MAX_LENGTH_SAMPLES;
 
       uint8_t sync[MODE2_SYNC_LENGTH_BYTES];
-      samplesToBits(startPtr, MODE2_SYNC_LENGTH_SYMBOLS, sync, 0U, m_centreVal, m_thresholdVal);
+      samplesToBits(startPtr, MODE2_SYNC_LENGTH_SYMBOLS, sync);
 
       uint8_t errs = 0U;
       for (uint8_t i = 0U; i < MODE2_SYNC_LENGTH_BYTES; i++)
         errs += countBits8(sync[i] ^ MODE2_SYNC_BYTES[i]);
 
       if (errs <= MAX_SYNC_BIT_ERRS) {
-        m_maxCorr = (corr1 > corr2) ? corr1 : corr2;
+        m_maxCorr = m_invert ? -corr : corr;
         m_syncPtr = m_dataPtr;
 
         // The header starts right after the sync vector
@@ -415,30 +410,36 @@ void CMode2RX::calculateLevels(uint16_t start, uint16_t count)
   m_thresholdVal >>= 4;
 }
 
-void CMode2RX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer, uint16_t offset, q15_t centre, q15_t threshold)
+void CMode2RX::samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer)
 {
-  for (uint16_t i = 0U; i < count; i++) {
-    q15_t sample = m_buffer[start] - centre;
+  uint16_t offset = 0U;
 
-    if (sample < -threshold) {
-      WRITE_BIT1(buffer, offset, m_invert);
+  for (uint16_t i = 0U; i < count; i++) {
+    q15_t sample = 0;
+    if (m_invert)
+      sample = -m_buffer[start] - m_centreVal;
+    else
+      sample = m_buffer[start] - m_centreVal;
+
+    if (sample < -m_thresholdVal) {
+      WRITE_BIT1(buffer, offset, false);
       offset++;
-      WRITE_BIT1(buffer, offset, !m_invert);
+      WRITE_BIT1(buffer, offset, true);
       offset++;
     } else if (sample < 0) {
-      WRITE_BIT1(buffer, offset, m_invert);
+      WRITE_BIT1(buffer, offset, false);
       offset++;
-      WRITE_BIT1(buffer, offset, m_invert);
+      WRITE_BIT1(buffer, offset, false);
       offset++;
-    } else if (sample < threshold) {
-      WRITE_BIT1(buffer, offset, !m_invert);
+    } else if (sample < m_thresholdVal) {
+      WRITE_BIT1(buffer, offset, true);
       offset++;
-      WRITE_BIT1(buffer, offset, m_invert);
+      WRITE_BIT1(buffer, offset, false);
       offset++;
     } else {
-      WRITE_BIT1(buffer, offset, !m_invert);
+      WRITE_BIT1(buffer, offset, true);
       offset++;
-      WRITE_BIT1(buffer, offset, !m_invert);
+      WRITE_BIT1(buffer, offset, true);
       offset++;
     }
 
