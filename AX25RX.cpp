@@ -68,7 +68,6 @@ m_demod3(9),
 m_lastFCS(0U),
 m_count(0U),
 m_slotCount(0U),
-m_dcd(false),
 m_canTX(false),
 m_x(1U),
 m_a(0xB7U),
@@ -133,7 +132,6 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
       if (!m_dcd) {
         io.setDecode(true);
         io.setADCDetection(true);
-        m_dcd = true;
       }
 
       m_canTX = false;
@@ -141,7 +139,6 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
       if (m_dcd) {
         io.setDecode(false);
         io.setADCDetection(false);
-        m_dcd = false;
       }
 
       m_canTX = m_pPersist >= rand();

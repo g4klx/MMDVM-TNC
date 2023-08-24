@@ -18,17 +18,17 @@
 
 #include "Config.h"
 
-#if !defined(IL2PTX_H)
-#define  IL2PTX_H
+#if !defined(MODE2TX_H)
+#define  MODE2TX_H
 
 #include <vector>
 
 #include "IL2PTXFrame.h"
 #include "RingBuffer.h"
 
-class CIL2PTX {
+class CMode2TX {
 public:
-  CIL2PTX();
+  CMode2TX();
 
   uint8_t writeData(const uint8_t* data, uint16_t length);
   uint8_t writeDataAck(uint16_t token, const uint8_t* data, uint16_t length);
@@ -37,8 +37,6 @@ public:
 
   void setTXDelay(uint8_t value);
   void setLevel(uint8_t value);
-
-  uint8_t getSpace() const;
 
 private:
   CRingBuffer<uint8_t>             m_fifo;

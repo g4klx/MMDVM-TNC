@@ -200,11 +200,6 @@ void CAX25TX::setLevel(uint8_t value)
 {
   m_level = q15_t(value * 128);
 }
-  
-uint8_t CAX25TX::getSpace() const
-{
-  return m_poLen == 0U ? 255U : 0U;
-}
 
 bool CAX25TX::NRZI(bool b)
 {

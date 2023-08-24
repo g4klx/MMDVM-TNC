@@ -36,7 +36,7 @@
 // #define EXTERNAL_OSC 19200000
 
 // Baud rate for host communication.
-#define SERIAL_SPEED	38400
+#define SERIAL_SPEED	115200
 
 // Select the initial packet mode
 // 1 = 1200 bps AFSK AX.25

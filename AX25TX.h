@@ -35,8 +35,6 @@ public:
   void setTXDelay(uint8_t value);
   void setLevel(uint8_t value);
 
-  uint8_t getSpace() const;
-
 private:
   uint8_t    m_poBuffer[600U];
   uint16_t   m_poLen;

@@ -31,7 +31,6 @@ m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rxLevel(RX_LEVEL * 128),
 m_ledCount(0U),
 m_ledValue(true),
-m_dcd(false),
 m_detect(false),
 m_adcOverflow(0U),
 m_dacOverflow(0U)
@@ -153,7 +152,7 @@ void CIO::process()
         break;
 
       case 2U:
-        il2pRX.samples(samples, RX_BLOCK_SIZE);
+        mode2RX.samples(samples, RX_BLOCK_SIZE);
         break;
     }
   }

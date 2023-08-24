@@ -18,23 +18,23 @@
 
 #include "Config.h"
 
-#if !defined(IL2PRX_H)
-#define  IL2PRX_H
+#if !defined(MODE2RX_H)
+#define  MODE2RX_H
 
-#include "IL2PDefines.h"
+#include "Mode2Defines.h"
 #include "IL2PRXFrame.h"
 
-enum IL2PRX_STATE {
-  IL2PRXS_NONE,
-  IL2PRXS_HEADER,
-  IL2PRXS_PAYLOAD
+enum MODE2RX_STATE {
+  MODE2RXS_NONE,
+  MODE2RXS_HEADER,
+  MODE2RXS_PAYLOAD
 };
 
-const uint16_t IL2P_MAX_LENGTH_SAMPLES = (1023U + IL2P_HEADER_LENGTH_BYTES + IL2P_HEADER_PARITY_BYTES + 5U * 16U) * IL2P_SYMBOLS_PER_BYTE;
+const uint16_t MODE2_MAX_LENGTH_SAMPLES = (1023U + MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 5U * 16U) * MODE2_SYMBOLS_PER_BYTE;
 
-class CIL2PRX {
+class CMode2RX {
 public:
-  CIL2PRX();
+  CMode2RX();
 
   void reset();
 
@@ -43,11 +43,11 @@ public:
   bool canTX() const;
 
 private:
-  IL2PRX_STATE         m_state;
+  MODE2RX_STATE        m_state;
   arm_fir_instance_q15 m_rrc02Filter;
   q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  uint32_t             m_bitBuffer[IL2P_RADIO_SYMBOL_LENGTH];
-  q15_t                m_buffer[IL2P_MAX_LENGTH_SAMPLES];
+  uint32_t             m_bitBuffer[MODE2_RADIO_SYMBOL_LENGTH];
+  q15_t                m_buffer[MODE2_MAX_LENGTH_SAMPLES];
   uint16_t             m_bitPtr;
   uint16_t             m_dataPtr;
   uint16_t             m_startPtr;
@@ -63,7 +63,6 @@ private:
   uint8_t              m_averagePtr;
   uint8_t              m_countdown;
   uint32_t             m_slotCount;
-  bool                 m_dcd;
   bool                 m_canTX;
   uint8_t              m_packet[1100U];
   uint8_t              m_x;

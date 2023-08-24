@@ -29,13 +29,14 @@ bool m_duplex       = false;
 uint32_t m_slotTime = (SLOT_TIME / 10U) * 240U;
 uint8_t  m_pPersist = P_PERSISTENCE;
 
-bool m_tx = false;
+bool m_dcd = false;
+bool m_tx  = false;
 
 CAX25RX ax25RX;
 CAX25TX ax25TX;
 
-CIL2PTX il2pTX;
-CIL2PRX il2pRX;
+CMode2TX mode2TX;
+CMode2RX mode2RX;
 
 CSerialPort serial;
 CIO io;
@@ -57,7 +58,7 @@ void loop()
       ax25TX.process();
       break;
     case 2U:
-      il2pTX.process();
+      mode2TX.process();
       break;
   }
 }

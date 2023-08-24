@@ -40,7 +40,6 @@ private:
   uint16_t             m_lastFCS;
   uint32_t             m_count;
   uint32_t             m_slotCount;
-  bool                 m_dcd;
   bool                 m_canTX;
   uint8_t              m_x;
   uint8_t              m_a;

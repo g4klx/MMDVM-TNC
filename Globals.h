@@ -46,8 +46,8 @@
 #include "SerialPort.h"
 #include "AX25RX.h"
 #include "AX25TX.h"
-#include "IL2PRX.h"
-#include "IL2PTX.h"
+#include "Mode2RX.h"
+#include "Mode2TX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -68,6 +68,7 @@ extern bool     m_duplex;
 extern uint32_t m_slotTime;
 extern uint8_t  m_pPersist;
 
+extern bool m_dcd;
 extern bool m_tx;
 
 extern CSerialPort serial;
@@ -76,8 +77,8 @@ extern CIO io;
 extern CAX25RX ax25RX;
 extern CAX25TX ax25TX;
 
-extern CIL2PTX il2pTX;
-extern CIL2PRX il2pRX;
+extern CMode2TX mode2TX;
+extern CMode2RX mode2RX;
 
 #endif
 

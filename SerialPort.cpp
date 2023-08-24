@@ -132,14 +132,14 @@ void CSerialPort::processMessage()
           ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
         case 2U:
-          il2pTX.writeData(m_buffer + 1U, m_ptr - 1U);
+          mode2TX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
       }
       break;
     case KISS_TYPE_TX_DELAY:
       if (m_ptr == 2U) {
         ax25TX.setTXDelay(m_buffer[1U]);
-        il2pTX.setTXDelay(m_buffer[1U]);
+        mode2TX.setTXDelay(m_buffer[1U]);
         DEBUG2("Setting TX Delay to", m_buffer[1U]);
       }
       break;
@@ -169,7 +169,7 @@ void CSerialPort::processMessage()
       } else if (m_ptr == 4U) {
         io.setParameters(m_buffer[1U]);
         ax25TX.setLevel(m_buffer[2]);
-        il2pTX.setLevel(m_buffer[3]);
+        mode2TX.setLevel(m_buffer[3]);
         DEBUG2("Setting RX Level to", m_buffer[1U]);
         DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
         DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);
@@ -182,7 +182,7 @@ void CSerialPort::processMessage()
             ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
           case 2U:
-            il2pTX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+            mode2TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
         }
       }
@@ -195,32 +195,34 @@ void CSerialPort::processMessage()
 
 void CSerialPort::writeKISSData(uint8_t type, const uint8_t* data, uint16_t length)
 {
-  uint8_t  buffer[2000U];
-  uint16_t pos = 0U;
+  uint8_t buffer[2U];
 
-  buffer[pos++] = KISS_FEND;
-
-  buffer[pos++] = type;
+  buffer[0U] = KISS_FEND;
+  buffer[1U] = type;
+  writeInt(1U, buffer, 2U);
 
   for (uint16_t i = 0U; i < length; i++) {
-    switch (data[i]) {
+    buffer[0U] = data[i];
+
+    switch (buffer[0U]) {
       case KISS_FEND:
-        buffer[pos++] = KISS_FESC;
-        buffer[pos++] = KISS_TFEND;
+        buffer[0U] = KISS_FESC;
+        buffer[1U] = KISS_TFEND;
+        writeInt(1U, buffer, 2U);
         break;
       case KISS_FESC:
-        buffer[pos++] = KISS_FESC;
-        buffer[pos++] = KISS_TFESC;
+        buffer[0U] = KISS_FESC;
+        buffer[1U] = KISS_TFESC;
+        writeInt(1U, buffer, 2U);
         break;
       default:
-        buffer[pos++] = data[i];
+        writeInt(1U, buffer, 1U);
         break;
     }
   }
 
-  buffer[pos++] = KISS_FEND;
-
-  writeInt(1U, buffer, pos);
+  buffer[0U] = KISS_FEND;
+  writeInt(1U, buffer, 1U);
 }
 
 void CSerialPort::writeKISSAck(uint16_t token)

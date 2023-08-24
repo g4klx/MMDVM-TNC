@@ -27,13 +27,14 @@ uint8_t  m_pPersist = P_PERSISTENCE;
 
 uint8_t m_mode = INITIAL_MODE;
 
-bool m_tx = false;
+bool m_dcd = false;
+bool m_tx  = false;
 
 CAX25RX ax25RX;
 CAX25TX ax25TX;
 
-CIL2PTX il2pTX;
-CIL2PRX il2pRX;
+CMode2TX mode2TX;
+CMode2RX mode2RX;
 
 CSerialPort serial;
 CIO io;
@@ -55,7 +56,7 @@ void loop()
       ax25TX.process();
       break;
     case 2U:
-      il2pTX.process();
+      mode2TX.process();
       break;
   }
 }
