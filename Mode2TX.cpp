@@ -45,6 +45,7 @@ const uint8_t BIT_MASK_TABLE2[] = { 0x01U, 0x02U, 0x04U, 0x08U, 0x10U, 0x20U, 0x
 
 CMode2TX::CMode2TX() :
 m_fifo(3000U),
+m_playOut(0U),
 m_modFilter(),
 m_modState(),
 m_frame(),
@@ -88,16 +89,33 @@ void CMode2TX::process()
     }
   }
 
-  uint16_t space = io.getSpace();
-  while (space > (4U * MODE2_RADIO_SYMBOL_LENGTH)) {
-    uint8_t c;
-    bool ok = m_fifo.get(c);
-    if (!ok)
-      return;
+  // Are we sending the trailer?
+  if (m_playOut > 0U) {
+    uint16_t space = io.getSpace();
+    while ((m_playOut > 0U) && (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH))) {
+      writeByte(MODE2_PREAMBLE_BYTE);
 
-    writeByte(c);
+      space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
+      m_playOut--;
+    }
 
-    space -= 4U * MODE2_RADIO_SYMBOL_LENGTH;
+    return;
+  }
+
+  if (m_fifo.getData() > 0U) {
+    uint16_t space = io.getSpace();
+    while (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH)) {
+      uint8_t c;
+      bool ok = m_fifo.get(c);
+      if (!ok) {
+        m_playOut = 12U;
+        return;
+      }
+
+      writeByte(c);
+
+      space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
+    }
   }
 }
 
@@ -125,9 +143,6 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
   for (uint16_t i = 0U; i < len; i++)
     m_fifo.put(buffer[i]);
 
-  // Flush the transmitter
-  m_fifo.put(MODE2_PREAMBLE_BYTE);
-
   return 0U;
 }
 
@@ -140,7 +155,7 @@ uint8_t CMode2TX::writeDataAck(uint16_t token, const uint8_t* data, uint16_t len
 
 void CMode2TX::writeByte(uint8_t c)
 {
-  q15_t inBuffer[4U];
+  q15_t inBuffer[MODE2_SYMBOLS_PER_BYTE];
 
   const uint8_t MASK = 0xC0U;
 
@@ -168,9 +183,9 @@ void CMode2TX::writeByte(uint8_t c)
   }
 
   q15_t outBuffer[MODE2_RADIO_SYMBOL_LENGTH * 4U];
-  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, 4U);
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, MODE2_SYMBOLS_PER_BYTE);
 
-  io.write(outBuffer, MODE2_RADIO_SYMBOL_LENGTH * 4U);
+  io.write(outBuffer, MODE2_RADIO_SYMBOL_LENGTH * MODE2_SYMBOLS_PER_BYTE);
 }
 
 void CMode2TX::setTXDelay(uint8_t value)
