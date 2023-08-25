@@ -18,23 +18,23 @@
 
 #include "Config.h"
 
-#if !defined(MODE2RX_H)
-#define  MODE2RX_H
+#if !defined(MODE3RX_H)
+#define  MODE3RX_H
 
-#include "Mode2Defines.h"
+#include "Mode3Defines.h"
 #include "IL2PRX.h"
 
-enum MODE2RX_STATE {
-  MODE2RXS_NONE,
-  MODE2RXS_HEADER,
-  MODE2RXS_PAYLOAD
+enum MODE3RX_STATE {
+  MODE3RXS_NONE,
+  MODE3RXS_HEADER,
+  MODE3RXS_PAYLOAD
 };
 
-const uint16_t MODE2_MAX_LENGTH_SAMPLES = (1023U + MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 5U * MODE2_PAYLOAD_PARITY_BYTES) * MODE2_SYMBOLS_PER_BYTE;
+const uint16_t MODE3_MAX_LENGTH_SAMPLES = (1023U + MODE3_HEADER_LENGTH_BYTES + MODE3_HEADER_PARITY_BYTES + 5U * MODE3_PAYLOAD_PARITY_BYTES) * MODE3_SYMBOLS_PER_BYTE;
 
-class CMode2RX {
+class CMode3RX {
 public:
-  CMode2RX();
+  CMode3RX();
 
   void reset();
 
@@ -43,11 +43,11 @@ public:
   bool canTX() const;
 
 private:
-  MODE2RX_STATE        m_state;
+  MODE3RX_STATE        m_state;
   arm_fir_instance_q15 m_rrc02Filter;
-  q15_t                m_rrc02State[110U];         // NoTaps + BlockSize - 1, 82 + 20 - 1 plus some spare
-  uint32_t             m_bitBuffer[MODE2_RADIO_SYMBOL_LENGTH];
-  q15_t                m_buffer[MODE2_MAX_LENGTH_SAMPLES];
+  q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
+  uint32_t             m_bitBuffer[MODE3_RADIO_SYMBOL_LENGTH];
+  q15_t                m_buffer[MODE3_MAX_LENGTH_SAMPLES];
   uint16_t             m_bitPtr;
   uint16_t             m_dataPtr;
   uint16_t             m_startPtr;

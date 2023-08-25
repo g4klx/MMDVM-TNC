@@ -36,6 +36,9 @@ CAX25TX ax25TX;
 CMode2TX mode2TX;
 CMode2RX mode2RX;
 
+CMode3TX mode3TX;
+CMode3RX mode3RX;
+
 CSerialPort serial;
 CIO io;
 
@@ -58,6 +61,8 @@ void loop()
     case 2U:
       mode2TX.process();
       break;
-  }
+    case 3U:
+      mode3TX.process();
+      break;  }
 }
 

@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-const uint8_t MODE2_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
+const uint8_t MODE2_RADIO_SYMBOL_LENGTH = 10U;      // At 48 kHz sample rate
 
 const uint8_t MODE2_PREAMBLE_BYTE = 0x77U;
 

@@ -64,8 +64,8 @@
 // Set the mode 1 transmit level (out of 255)
 #define	MODE1_TX_LEVEL	128
 
-// Set the mode 2 transmit level (out of 255)
-#define	MODE2_TX_LEVEL	128
+// Set the mode 2/3 transmit level (out of 255)
+#define	MODE23_TX_LEVEL	128
 
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS

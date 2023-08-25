@@ -48,6 +48,8 @@
 #include "AX25TX.h"
 #include "Mode2RX.h"
 #include "Mode2TX.h"
+#include "Mode3RX.h"
+#include "Mode3TX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -79,6 +81,9 @@ extern CAX25TX ax25TX;
 
 extern CMode2TX mode2TX;
 extern CMode2RX mode2RX;
+
+extern CMode3TX mode3TX;
+extern CMode3RX mode3RX;
 
 #endif
 

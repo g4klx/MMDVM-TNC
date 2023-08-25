@@ -107,14 +107,14 @@ void CIO::process()
 #if defined(CONSTANT_SRV_LED)
     setLEDInt(true);
 #else
-    if (m_ledCount >= 24000U) {
+    if (m_ledCount >= 48000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);
     }
 #endif
   } else {
-    if (m_ledCount >= 240000U) {
+    if (m_ledCount >= 480000U) {
       m_ledCount = 0U;
       m_ledValue = !m_ledValue;
       setLEDInt(m_ledValue);
@@ -153,6 +153,10 @@ void CIO::process()
 
       case 2U:
         mode2RX.samples(samples, RX_BLOCK_SIZE);
+        break;
+
+      case 3U:
+        mode3RX.samples(samples, RX_BLOCK_SIZE);
         break;
     }
   }
@@ -195,6 +199,12 @@ void CIO::showMode()
       setMode1Int(false);
       setMode2Int(true);
       setMode3Int(false);
+      setMode4Int(false);
+      break;
+    case 3U:
+      setMode1Int(false);
+      setMode2Int(false);
+      setMode3Int(true);
       setMode4Int(false);
       break;
     default:
