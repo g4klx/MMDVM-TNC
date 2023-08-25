@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "IL2PRXFrame.h"
+#include "IL2PRX.h"
 #include "Debug.h"
 
 #include <cstring>
@@ -49,7 +49,7 @@ static const struct IL2P_PID {
   {0xCEU, 0x0DU}     // FlexNet
 };
 
-CIL2PRXFrame::CIL2PRXFrame() :
+CIL2PRX::CIL2PRX() :
 m_rs2(2U),
 m_rs4(4U),
 m_rs6(6U),
@@ -67,11 +67,7 @@ m_outOffset(0U)
 {
 }
 
-CIL2PRXFrame::~CIL2PRXFrame()
-{
-}
-
-bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
+bool CIL2PRX::processHeader(const uint8_t* in, uint8_t* out)
 {
   uint8_t buffer[20U];
   ::memcpy(buffer, in, IL2P_HDR_LENGTH + 2U);
@@ -98,7 +94,7 @@ bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
   return true;
 }
 
-bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
+bool CIL2PRX::processPayload(const uint8_t* in, uint8_t* out)
 {
   uint16_t payloadOffset = 0U;
 
@@ -131,22 +127,22 @@ bool CIL2PRXFrame::processPayload(const uint8_t* in, uint8_t* out)
   return true;
 }
 
-uint16_t CIL2PRXFrame::getHeaderLength() const
+uint16_t CIL2PRX::getHeaderLength() const
 {
   return m_headerByteCount;
 }
 
-uint16_t CIL2PRXFrame::getPayloadLength() const
+uint16_t CIL2PRX::getPayloadLength() const
 {
   return m_payloadByteCount;
 }
 
-uint16_t CIL2PRXFrame::getPayloadParityLength() const
+uint16_t CIL2PRX::getPayloadParityLength() const
 {
   return m_paritySymbolsPerBlock * (m_largeBlockCount + m_smallBlockCount);
 }
 
-void CIL2PRXFrame::calculatePayloadBlockSize()
+void CIL2PRX::calculatePayloadBlockSize()
 {
   if (m_payloadByteCount == 0U) {
     m_payloadBlockCount = 0U;
@@ -169,7 +165,7 @@ void CIL2PRXFrame::calculatePayloadBlockSize()
   }
 }
 
-void CIL2PRXFrame::processType0Header(const uint8_t* in, uint8_t* out)
+void CIL2PRX::processType0Header(const uint8_t* in, uint8_t* out)
 {
   DEBUG1("IL2PRX: type 0 header");
 
@@ -188,7 +184,7 @@ void CIL2PRXFrame::processType0Header(const uint8_t* in, uint8_t* out)
   m_payloadByteCount |= (in[11U] & 0x80U) == 0x80U ? 0x0001U : 0x0000U;
 }
 
-void CIL2PRXFrame::processType1Header(const uint8_t* in, uint8_t* out)
+void CIL2PRX::processType1Header(const uint8_t* in, uint8_t* out)
 {
   DEBUG1("IL2PRX: type 1 header");
 
@@ -332,7 +328,7 @@ void CIL2PRXFrame::processType1Header(const uint8_t* in, uint8_t* out)
   m_headerByteCount = hasPID ? 16U : 15U;
 }
 
-void CIL2PRXFrame::unscramble(uint8_t* buffer, uint16_t length) const
+void CIL2PRX::unscramble(uint8_t* buffer, uint16_t length) const
 {
   const uint16_t bitLength = length * 8U;
 
@@ -352,7 +348,7 @@ void CIL2PRXFrame::unscramble(uint8_t* buffer, uint16_t length) const
   }
 }
 
-bool CIL2PRXFrame::decode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const
+bool CIL2PRX::decode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const
 {
   uint16_t n = length + numSymbols;
 

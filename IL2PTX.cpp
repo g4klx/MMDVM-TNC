@@ -16,7 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "IL2PTXFrame.h"
+#include "IL2PTX.h"
 #include "Debug.h"
 
 #include <cstring>
@@ -49,7 +49,7 @@ static const struct IL2P_PID {
   {0xCEU, 0x0DU}     // FlexNet
 };
 
-CIL2PTXFrame::CIL2PTXFrame() :
+CIL2PTX::CIL2PTX() :
 m_rs2(2U),
 m_rs4(4U),
 m_rs6(6U),
@@ -66,11 +66,7 @@ m_paritySymbolsPerBlock(0U)
 {
 }
 
-CIL2PTXFrame::~CIL2PTXFrame()
-{
-}
-
-uint16_t CIL2PTXFrame::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
+uint16_t CIL2PTX::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
 {
   bool type1 = isIL2PType1(in, inLength);
   if (type1)
@@ -108,7 +104,7 @@ uint16_t CIL2PTXFrame::process(const uint8_t* in, uint16_t inLength, uint8_t* ou
   return outLength;
 }
 
-bool CIL2PTXFrame::isIL2PType1(const uint8_t* frame, uint16_t length) const
+bool CIL2PTX::isIL2PType1(const uint8_t* frame, uint16_t length) const
 {
   // Has any digipeaters?
   if ((frame[13U] & 0x01U) == 0x00U)
@@ -148,11 +144,13 @@ bool CIL2PTXFrame::isIL2PType1(const uint8_t* frame, uint16_t length) const
   return true;  
 }
 
-void CIL2PTXFrame::processType0Header(const uint8_t* in, uint16_t length, uint8_t* out)
+void CIL2PTX::processType0Header(const uint8_t* in, uint16_t length, uint8_t* out)
 {
   DEBUG1("IL2PTX: type 0 header");
 
   ::memset(out, 0x00U, IL2P_HDR_LENGTH);
+
+  out[0U]  = 0x80U;     // Checksum off bit
 
   out[2U]  = (length & 0x0200U) == 0x0200U ? 0x80U : 0x00U;
   out[3U]  = (length & 0x0100U) == 0x0100U ? 0x80U : 0x00U;
@@ -169,7 +167,7 @@ void CIL2PTXFrame::processType0Header(const uint8_t* in, uint16_t length, uint8_
   m_payloadOffset    = 0U;
 }
 
-void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_t* out)
+void CIL2PTX::processType1Header(const uint8_t* in, uint16_t length, uint8_t* out)
 {
   DEBUG1("IL2PTX: type 1 header");
 
@@ -183,6 +181,9 @@ void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_
     out[i + 0U] = (in[i + 0U] >> 1) - 0x20U;  // Destination callsign
     out[i + 6U] = (in[i + 7U] >> 1) - 0x20U;  // Source callsign
   }
+
+  out[0U] |= 0x80U;      // Checksum off bit
+  out[1U] |= 0x80U;      // It's a type 1 header
 
   out[12U]  = (in[13U] >> 1) & 0x0FU;  // The source SSID
   out[12U] |= (in[6U]  << 3) & 0xF0U;  // The destination SSID
@@ -272,8 +273,6 @@ void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_
     }
   }
 
-  out[1U] |= 0x80U;      // It's a type 1
-
   if (hasPID) {      // We have a PID and maybe data
     for (std::size_t i = 0; i < (sizeof(IL2P_PIDS) / sizeof(struct IL2P_PID)); i++) {
       if (IL2P_PIDS[i].ax25PID == in[15U]) {
@@ -311,7 +310,7 @@ void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_
   }
 }
 
-void CIL2PTXFrame::calculatePayloadBlockSize()
+void CIL2PTX::calculatePayloadBlockSize()
 {
   if (m_payloadByteCount == 0U) {
     m_payloadBlockCount = 0U;
@@ -334,7 +333,7 @@ void CIL2PTXFrame::calculatePayloadBlockSize()
   }
 }
 
-void CIL2PTXFrame::scramble(uint8_t* buffer, uint16_t length) const
+void CIL2PTX::scramble(uint8_t* buffer, uint16_t length) const
 {
   const uint16_t bitLength = length * 8U;
 
@@ -373,7 +372,7 @@ void CIL2PTXFrame::scramble(uint8_t* buffer, uint16_t length) const
   }
 }
 
-uint8_t CIL2PTXFrame::encode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const
+uint8_t CIL2PTX::encode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const
 {
   uint8_t rsBlock[RS_BLOCK_LENGTH];
   ::memset(rsBlock, 0x00U, RS_BLOCK_LENGTH);

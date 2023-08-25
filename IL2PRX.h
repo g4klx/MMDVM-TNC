@@ -16,19 +16,24 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(IL2PTXFRAME_H)
-#define	IL2PTXFRAME_H
+#if !defined(IL2PRX_H)
+#define	IL2PRX_H
 
 #include "IL2PRS.h"
 
 #include <cstdint>
 
-class CIL2PTXFrame {
+class CIL2PRX {
 public:
-  CIL2PTXFrame();
-  ~CIL2PTXFrame();
+  CIL2PRX();
 
-  uint16_t process(const uint8_t* in, uint16_t inLength, uint8_t* out);
+  bool processHeader(const uint8_t* in, uint8_t* out);
+  bool processPayload(const uint8_t* in, uint8_t* out);
+
+  uint16_t getHeaderLength() const;
+  uint16_t getPayloadLength() const;
+
+  uint16_t getPayloadParityLength() const;
 
 private:
   CIL2PRS  m_rs2;
@@ -36,24 +41,24 @@ private:
   CIL2PRS  m_rs6;
   CIL2PRS  m_rs8;
   CIL2PRS  m_rs16;
+  uint16_t m_headerByteCount;
   uint16_t m_payloadByteCount;
-  uint16_t m_payloadOffset;
   uint8_t  m_payloadBlockCount;
   uint8_t  m_smallBlockSize;
   uint8_t  m_largeBlockSize;
   uint8_t  m_largeBlockCount;
   uint8_t  m_smallBlockCount;
   uint8_t  m_paritySymbolsPerBlock;
-
-  bool isIL2PType1(const uint8_t* frame, uint16_t length) const;
-  void processType0Header(const uint8_t* in, uint16_t length, uint8_t* out);
-  void processType1Header(const uint8_t* in, uint16_t length, uint8_t* out);
+  uint16_t m_outOffset;
 
   void calculatePayloadBlockSize();
 
-  void scramble(uint8_t* buffer, uint16_t length) const;
+  void processType0Header(const uint8_t* in, uint8_t* out);
+  void processType1Header(const uint8_t* in, uint8_t* out);
 
-  uint8_t encode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const;
+  void unscramble(uint8_t* buffer, uint16_t length) const;
+
+  bool decode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const;
 };
 
 #endif

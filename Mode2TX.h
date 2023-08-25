@@ -23,7 +23,7 @@
 
 #include <vector>
 
-#include "IL2PTXFrame.h"
+#include "IL2PTX.h"
 #include "RingBuffer.h"
 
 class CMode2TX {
@@ -42,7 +42,7 @@ private:
   CRingBuffer<uint8_t>             m_fifo;
   arm_fir_interpolate_instance_q15 m_modFilter;
   q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
-  CIL2PTXFrame                     m_frame;
+  CIL2PTX                          m_frame;
   q15_t                            m_level;
   uint16_t                         m_txDelay;
   std::vector<uint16_t>            m_tokens;

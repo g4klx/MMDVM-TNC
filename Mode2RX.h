@@ -22,7 +22,7 @@
 #define  MODE2RX_H
 
 #include "Mode2Defines.h"
-#include "IL2PRXFrame.h"
+#include "IL2PRX.h"
 
 enum MODE2RX_STATE {
   MODE2RXS_NONE,
@@ -54,7 +54,7 @@ private:
   uint16_t             m_endPtr;
   uint16_t             m_syncPtr;
   bool                 m_invert;
-  CIL2PRXFrame         m_frame;
+  CIL2PRX              m_frame;
   q31_t                m_maxCorr;
   q15_t                m_centre[16U];
   q15_t                m_centreVal;
