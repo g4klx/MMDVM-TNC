@@ -25,13 +25,12 @@
 
 class CIL2PTXFrame {
 public:
-  CIL2PTXFrame(bool maxFEC);
+  CIL2PTXFrame();
   ~CIL2PTXFrame();
 
   uint16_t process(const uint8_t* in, uint16_t inLength, uint8_t* out);
 
 private:
-  bool     m_maxFEC;
   CIL2PRS  m_rs2;
   CIL2PRS  m_rs4;
   CIL2PRS  m_rs6;
@@ -50,7 +49,7 @@ private:
   void processType0Header(const uint8_t* in, uint16_t length, uint8_t* out);
   void processType1Header(const uint8_t* in, uint16_t length, uint8_t* out);
 
-  void calculatePayloadBlockSize(bool max);
+  void calculatePayloadBlockSize();
 
   void scramble(uint8_t* buffer, uint16_t length) const;
 

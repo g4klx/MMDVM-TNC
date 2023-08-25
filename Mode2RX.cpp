@@ -171,7 +171,7 @@ void CMode2RX::processHeader(q15_t sample)
   if (m_dataPtr == m_endPtr) {
     calculateLevels(m_startPtr, MODE2_HEADER_LENGTH_SYMBOLS + MODE2_HEADER_PARITY_SYMBOLS + 1U);
 
-    uint8_t frame[MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES];
+    uint8_t frame[MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 1U];
     samplesToBits(m_startPtr, MODE2_HEADER_LENGTH_SYMBOLS + MODE2_HEADER_PARITY_SYMBOLS + 1U, frame);
 
     bool ok = m_frame.processHeader(frame, m_packet);
@@ -186,8 +186,6 @@ void CMode2RX::processHeader(q15_t sample)
 
         // The payload starts right after the header
         m_startPtr = m_endPtr;
-        if (m_startPtr >= MODE2_MAX_LENGTH_SAMPLES)
-          m_startPtr -= MODE2_MAX_LENGTH_SAMPLES;
 
         m_endPtr = m_startPtr + (length * MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH);
         if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
@@ -201,11 +199,7 @@ void CMode2RX::processHeader(q15_t sample)
         io.setDecode(false);
         io.setADCDetection(false);
 
-        m_state      = MODE2RXS_NONE;
-        m_endPtr     = NOENDPTR;
-        m_averagePtr = NOAVEPTR;
-        m_countdown  = 0U;
-        m_maxCorr    = 0;
+        reset();
       }
     } else {
       DEBUG1("Mode2RX: header is invalid");
@@ -213,11 +207,7 @@ void CMode2RX::processHeader(q15_t sample)
       io.setDecode(false);
       io.setADCDetection(false);
 
-      m_state      = MODE2RXS_NONE;
-      m_endPtr     = NOENDPTR;
-      m_averagePtr = NOAVEPTR;
-      m_countdown  = 0U;
-      m_maxCorr    = 0;
+      reset();
     }
   }
 }
@@ -230,7 +220,7 @@ void CMode2RX::processPayload(q15_t sample)
 
     calculateLevels(m_startPtr, overallLength * MODE2_SYMBOLS_PER_BYTE + 1U);
 
-    uint8_t frame[1023U + (5U * 16U)];
+    uint8_t frame[1023U + (5U * MODE2_PAYLOAD_PARITY_BYTES)];
     samplesToBits(m_startPtr, overallLength * MODE2_SYMBOLS_PER_BYTE + 1U, frame);
 
     bool ok = m_frame.processPayload(frame, m_packet);
@@ -239,27 +229,14 @@ void CMode2RX::processPayload(q15_t sample)
 
       uint16_t length = m_frame.getHeaderLength() + payloadLength;
       serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-      io.setDecode(false);
-      io.setADCDetection(false);
-
-      m_state      = MODE2RXS_NONE;
-      m_endPtr     = NOENDPTR;
-      m_averagePtr = NOAVEPTR;
-      m_countdown  = 0U;
-      m_maxCorr    = 0;
     } else {
       DEBUG1("Mode2RX: payload is invalid");
-
-      io.setDecode(false);
-      io.setADCDetection(false);
-
-      m_state      = MODE2RXS_NONE;
-      m_endPtr     = NOENDPTR;
-      m_averagePtr = NOAVEPTR;
-      m_countdown  = 0U;
-      m_maxCorr    = 0;
     }
+
+    io.setDecode(false);
+    io.setADCDetection(false);
+
+    reset();
   }
 }
 

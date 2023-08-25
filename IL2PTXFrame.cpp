@@ -17,6 +17,7 @@
  */
 
 #include "IL2PTXFrame.h"
+#include "Debug.h"
 
 #include <cstring>
 
@@ -48,8 +49,7 @@ static const struct IL2P_PID {
   {0xCEU, 0x0DU}     // FlexNet
 };
 
-CIL2PTXFrame::CIL2PTXFrame(bool maxFEC) :
-m_maxFEC(maxFEC),
+CIL2PTXFrame::CIL2PTXFrame() :
 m_rs2(2U),
 m_rs4(4U),
 m_rs6(6U),
@@ -78,7 +78,7 @@ uint16_t CIL2PTXFrame::process(const uint8_t* in, uint16_t inLength, uint8_t* ou
   else
     processType0Header(in, inLength, out);
 
-  calculatePayloadBlockSize(m_maxFEC);
+  calculatePayloadBlockSize();
 
   // Scramble and RS encode the IL2P header
   scramble(out, IL2P_HDR_LENGTH);
@@ -150,9 +150,9 @@ bool CIL2PTXFrame::isIL2PType1(const uint8_t* frame, uint16_t length) const
 
 void CIL2PTXFrame::processType0Header(const uint8_t* in, uint16_t length, uint8_t* out)
 {
-  ::memset(out, 0x00U, IL2P_HDR_LENGTH);
+  DEBUG1("IL2PTX: type 0 header");
 
-  out[0U]  = m_maxFEC ? 0x80U : 0x00U;
+  ::memset(out, 0x00U, IL2P_HDR_LENGTH);
 
   out[2U]  = (length & 0x0200U) == 0x0200U ? 0x80U : 0x00U;
   out[3U]  = (length & 0x0100U) == 0x0100U ? 0x80U : 0x00U;
@@ -171,9 +171,9 @@ void CIL2PTXFrame::processType0Header(const uint8_t* in, uint16_t length, uint8_
 
 void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_t* out)
 {
-  ::memset(out, 0x00U, IL2P_HDR_LENGTH);
+  DEBUG1("IL2PTX: type 1 header");
 
-  out[0U] = m_maxFEC ? 0x80U : 0x00U;
+  ::memset(out, 0x00U, IL2P_HDR_LENGTH);
 
   m_payloadByteCount = 0U;
   m_payloadOffset    = 0U;
@@ -206,7 +206,6 @@ void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_
   } else if ((in[14U] & 0x03U) == 0x01U) {
     // S frame
     // Also a PID of 0x00 but that's default anyway
-    out[5U]  |= 0x40U;
     out[6U]  |= (in[14U] & 0x80U) == 0x80U ? 0x40U : 0x00U;
     out[7U]  |= (in[14U] & 0x40U) == 0x40U ? 0x40U : 0x00U;
     out[8U]  |= (in[14U] & 0x20U) == 0x20U ? 0x40U : 0x00U;
@@ -312,7 +311,7 @@ void CIL2PTXFrame::processType1Header(const uint8_t* in, uint16_t length, uint8_
   }
 }
 
-void CIL2PTXFrame::calculatePayloadBlockSize(bool max)
+void CIL2PTXFrame::calculatePayloadBlockSize()
 {
   if (m_payloadByteCount == 0U) {
     m_payloadBlockCount = 0U;
@@ -321,10 +320,7 @@ void CIL2PTXFrame::calculatePayloadBlockSize(bool max)
     m_largeBlockCount = 0U;
     m_smallBlockCount = 0U;
     m_paritySymbolsPerBlock = 0U;
-    return;
-  }
-
-  if (max) {
+  } else {
     m_payloadBlockCount  =  m_payloadByteCount / 239U;
     m_payloadBlockCount += (m_payloadByteCount % 239U) > 0U ? 1U : 0U;
 
@@ -335,17 +331,6 @@ void CIL2PTXFrame::calculatePayloadBlockSize(bool max)
     m_smallBlockCount = m_payloadBlockCount - m_largeBlockCount;
 
     m_paritySymbolsPerBlock = 16U;
-  } else {
-    m_payloadBlockCount  =  m_payloadByteCount / 247U;
-    m_payloadBlockCount += (m_payloadByteCount % 247U) > 0U ? 1U : 0U;
-
-    m_smallBlockSize = m_payloadByteCount / m_payloadBlockCount;
-    m_largeBlockSize = m_smallBlockSize + 1U;
-
-    m_largeBlockCount = m_payloadByteCount - (m_payloadBlockCount * m_smallBlockSize);
-    m_smallBlockCount = m_payloadBlockCount - m_largeBlockCount;
-
-    m_paritySymbolsPerBlock = (m_smallBlockSize / 32U) + 2U;
   }
 }
 

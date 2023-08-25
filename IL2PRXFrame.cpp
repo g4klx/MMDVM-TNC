@@ -17,6 +17,7 @@
  */
 
 #include "IL2PRXFrame.h"
+#include "Debug.h"
 
 #include <cstring>
 
@@ -90,11 +91,9 @@ bool CIL2PRXFrame::processHeader(const uint8_t* in, uint8_t* out)
   if (m_payloadByteCount > 1023U)
     return false;
 
-  bool maxFEC = (buffer[0U] & 0x80U) == 0x80U;
-
   m_outOffset = m_headerByteCount;
 
-  calculatePayloadBlockSize(maxFEC);
+  calculatePayloadBlockSize();
 
   return true;
 }
@@ -147,7 +146,7 @@ uint16_t CIL2PRXFrame::getPayloadParityLength() const
   return m_paritySymbolsPerBlock * (m_largeBlockCount + m_smallBlockCount);
 }
 
-void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
+void CIL2PRXFrame::calculatePayloadBlockSize()
 {
   if (m_payloadByteCount == 0U) {
     m_payloadBlockCount = 0U;
@@ -156,10 +155,7 @@ void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
     m_largeBlockCount = 0U;
     m_smallBlockCount = 0U;
     m_paritySymbolsPerBlock = 0U;
-    return;
-  }
-
-  if (max) {
+  } else {
     m_payloadBlockCount  =  m_payloadByteCount / 239U;
     m_payloadBlockCount += (m_payloadByteCount % 239U) > 0U ? 1U : 0U;
 
@@ -170,22 +166,13 @@ void CIL2PRXFrame::calculatePayloadBlockSize(bool max)
     m_smallBlockCount = m_payloadBlockCount - m_largeBlockCount;
 
     m_paritySymbolsPerBlock = 16U;
-  } else {
-    m_payloadBlockCount  =  m_payloadByteCount / 247U;
-    m_payloadBlockCount += (m_payloadByteCount % 247U) > 0U ? 1U : 0U;
-
-    m_smallBlockSize = m_payloadByteCount / m_payloadBlockCount;
-    m_largeBlockSize = m_smallBlockSize + 1U;
-
-    m_largeBlockCount = m_payloadByteCount - (m_payloadBlockCount * m_smallBlockSize);
-    m_smallBlockCount = m_payloadBlockCount - m_largeBlockCount;
-
-    m_paritySymbolsPerBlock = (m_smallBlockSize / 32U) + 2U;
   }
 }
 
 void CIL2PRXFrame::processType0Header(const uint8_t* in, uint8_t* out)
 {
+  DEBUG1("IL2PRX: type 0 header");
+
   m_headerByteCount  = 0U;
   m_payloadByteCount = 0U;
 
@@ -203,6 +190,8 @@ void CIL2PRXFrame::processType0Header(const uint8_t* in, uint8_t* out)
 
 void CIL2PRXFrame::processType1Header(const uint8_t* in, uint8_t* out)
 {
+  DEBUG1("IL2PRX: type 1 header");
+
   m_payloadByteCount = 0U;
 
   ::memset(out, 0x00U, 15U);

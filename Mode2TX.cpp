@@ -47,7 +47,7 @@ CMode2TX::CMode2TX() :
 m_fifo(3000U),
 m_modFilter(),
 m_modState(),
-m_frame(false),
+m_frame(),
 m_level(MODE2_TX_LEVEL * 128),
 m_txDelay((TX_DELAY / 10U) * 12U),
 m_tokens()

@@ -52,7 +52,7 @@ private:
   uint8_t  m_paritySymbolsPerBlock;
   uint16_t m_outOffset;
 
-  void calculatePayloadBlockSize(bool max);
+  void calculatePayloadBlockSize();
 
   void processType0Header(const uint8_t* in, uint8_t* out);
   void processType1Header(const uint8_t* in, uint8_t* out);
