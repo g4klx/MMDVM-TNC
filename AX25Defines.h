@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #if !defined(AX25DEFINES_H)
 #define  AX25DEFINES_H
 
-const uint8_t AX25_RADIO_SYMBOL_LENGTH = 20U;      // At 24 kHz sample rate
+const uint8_t AX25_RADIO_SYMBOL_LENGTH = 40U;      // At 48 kHz sample rate
 
 const uint8_t AX25_FRAME_START = 0x7EU;
 const uint8_t AX25_FRAME_END   = 0x7EU;

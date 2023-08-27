@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *   Copyright 2015-2019 Mobilinkd LLC <rob@mobilinkd.com>
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 #include "AX25Demodulator.h"
 #include "AX25Defines.h"
 
-const float32_t SAMPLE_RATE = 24000.0F;
+const float32_t SAMPLE_RATE = 48000.0F;
 const float32_t SYMBOL_RATE = 1200.0F;
 
 const uint16_t DELAY_LEN = 11U;
@@ -34,13 +34,11 @@ const float32_t PLL_LIMIT          = SAMPLES_PER_SYMBOL / 2.0F;
 const uint32_t LPF_FILTER_LEN = 48U;
 
 q15_t LPF_FILTER_COEFFS[] = {
-    -2,   -8,  -17,  -28,  -40,  -47,  -47,  -34,
-    -5,   46,  122,  224,  354,  510,  689,  885,
-  1092, 1302, 1506, 1693, 1856, 1987, 2077, 2124,
-  2124, 2077, 1987, 1856, 1693, 1506, 1302, 1092,
-  885,  689,  510,  354,  224,  122,   46,    -5,
-  -34,  -47,  -47,  -40,  -28,  -17,   -8,    -2
-};
+	-0,      0,    4,   15,   32,   52,   66,  62,  30,  -39,
+	-143, -270, -396, -487, -505, -410, -175,  213,  745, 1389,
+	2089, 2778, 3381, 3828, 4066, 4066, 3828, 3381, 2778, 2089,
+	1389, 745,   213, -175, -410, -505, -487, -396, -270, -143,
+	-39,   30,    62,   66,   52,   32,   15,    4};
 
 // Lock low-pass filter taps (80Hz Bessel)
 // scipy.signal:
