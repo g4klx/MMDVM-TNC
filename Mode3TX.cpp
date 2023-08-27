@@ -49,7 +49,7 @@ m_playOut(0U),
 m_modFilter(),
 m_modState(),
 m_frame(),
-m_level(MODE23_TX_LEVEL * 128),
+m_level(MODE3_TX_LEVEL * 128),
 m_txDelay((TX_DELAY / 10U) * 12U),
 m_tokens()
 {

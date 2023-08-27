@@ -170,14 +170,15 @@ void CSerialPort::processMessage()
         m_mode = m_buffer[1U];
         io.showMode();
         DEBUG2("Setting Mode to", m_buffer[1U]);
-      } else if (m_ptr == 4U) {
+      } else if (m_ptr == 5U) {
         io.setParameters(m_buffer[1U]);
         ax25TX.setLevel(m_buffer[2]);
         mode2TX.setLevel(m_buffer[3]);
-        mode3TX.setLevel(m_buffer[3]);
+        mode3TX.setLevel(m_buffer[4]);
         DEBUG2("Setting RX Level to", m_buffer[1U]);
         DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
-        DEBUG2("Setting Mode 2/3 TX Level to", m_buffer[3U]);
+        DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);
+        DEBUG2("Setting Mode 3 TX Level to", m_buffer[4U]);
       }
       break;
     case KISS_TYPE_DATA_WITH_ACK: {
