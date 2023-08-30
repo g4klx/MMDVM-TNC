@@ -69,15 +69,12 @@ void CMode2TX::process()
       for (const auto& token : m_tokens)
         serial.writeKISSAck(token);
       m_tokens.clear();
-      return;
     }
   } else {
     // Send the tokens back immediately as the packets can be transmitted immediately too
     for (const auto& token : m_tokens)
       serial.writeKISSAck(token);
     m_tokens.clear();
-    if (m_fifo.getData() == 0U)
-      return;
   }
 
   // Transmit is off but we have data to send
@@ -137,7 +134,7 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
   for (uint8_t i = 0U; i < MODE2_SYNC_LENGTH_BYTES; i++)
     m_fifo.put(MODE2_SYNC_BYTES[i]);
 
-  uint8_t buffer[1500U];
+  uint8_t buffer[2000U];
   uint16_t len = m_frame.process(data, length, buffer);
 
   for (uint16_t i = 0U; i < len; i++)

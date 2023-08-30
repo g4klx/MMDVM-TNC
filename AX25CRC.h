@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2021,2022,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,10 +16,17 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#if !defined(VERSION_H)
-#define  VERSION_H
+#if !defined(AX25CRC_H)
+#define  AX25CRC_H
 
-#define VERSION "20230830"
+#include <cstdint>
+
+class CAX25CRC {
+public:
+  CAX25CRC();
+
+  uint16_t calculate(const uint8_t* data, uint16_t length) const;
+};
 
 #endif
 

@@ -20,6 +20,8 @@
 #define	IL2PTX_H
 
 #include "IL2PRS.h"
+#include "AX25CRC.h"
+#include "Hamming.h"
 
 #include <cstdint>
 
@@ -35,6 +37,8 @@ private:
   CIL2PRS  m_rs6;
   CIL2PRS  m_rs8;
   CIL2PRS  m_rs16;
+  CAX25CRC m_crc;
+  CHamming m_hamming;
   uint16_t m_payloadByteCount;
   uint16_t m_payloadOffset;
   uint8_t  m_payloadBlockCount;
