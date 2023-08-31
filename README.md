@@ -4,7 +4,7 @@ Standard KISS command over the MMDVM serial port are used, the speed of which is
 
 The KISS SET HARDWARE command has two versions that allow it to control the modem (all of these settings may also be set in Config.h at compile time).
 
-A SET HARDWARE command with a single one byte argument sets the mode. The modes are 1200 bps AFSK AX.25 is mode 1 and 9600 bps C4FSK IL2P is mode 2. The mode is shown on the modem LEDs with D-Star showing mode 1 and DMR for mode 2. The other version of the command has three one byte arguments, the first byte being the Receive Level which has a range of 0 to 255, the second byte is the mode 1 Transmit Level which may be between 0 and 255, the thirs byte is the mode 2 Transmit Level which is also between 0 and 255.
+A SET HARDWARE command with a single one byte argument sets the mode. The modes are 1200 bps AFSK AX.25 is mode 1 and 9600 bps C4FSK IL2P is mode 2. The mode is shown on the modem LEDs with D-Star showing mode 1 and DMR for mode 2. The other version of the command has three one byte arguments, the first byte being the Receive Level which has a range of 0 to 255, the second byte is the mode 1 Transmit Level which may be between 0 and 255, the third byte is the mode 2 Transmit Level which is also between 0 and 255.
 
 Simple debugging is optionally available over the modems display serial port, usually used for Nextion displays, and these are output at 38400 baud. These may be switched on and off in Config.h.
 
