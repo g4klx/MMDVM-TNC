@@ -55,6 +55,8 @@ m_rs4(4U),
 m_rs6(6U),
 m_rs8(8U),
 m_rs16(16U),
+m_crc(),
+m_hamming(),
 m_headerByteCount(0U),
 m_payloadByteCount(0U),
 m_payloadBlockCount(0U),
@@ -63,7 +65,8 @@ m_largeBlockSize(0U),
 m_largeBlockCount(0U),
 m_smallBlockCount(0U),
 m_paritySymbolsPerBlock(0U),
-m_outOffset(0U)
+m_outOffset(0U),
+m_hasCRC(false)
 {
 }
 
@@ -82,6 +85,9 @@ bool CIL2PRX::processHeader(const uint8_t* in, uint8_t* out)
     processType1Header(buffer, out);
   else
     processType0Header(buffer, out);
+
+  // A zero indicates that a CRC is appended
+  m_hasCRC = (buffer[0U] & 0x80U) == 0x00U;
 
   // Sanity check
   if (m_payloadByteCount > 1023U)
@@ -106,9 +112,8 @@ bool CIL2PRX::processPayload(const uint8_t* in, uint8_t* out)
 
     unscramble(out + m_outOffset, m_largeBlockSize);
 
-    m_payloadByteCount -= m_largeBlockSize;
-    payloadOffset      += m_largeBlockSize + m_paritySymbolsPerBlock;
-    m_outOffset        += m_largeBlockSize;
+    payloadOffset += m_largeBlockSize + m_paritySymbolsPerBlock;
+    m_outOffset   += m_largeBlockSize;
   }
 
   for (uint8_t i = 0U; i < m_smallBlockCount; i++) {
@@ -119,9 +124,8 @@ bool CIL2PRX::processPayload(const uint8_t* in, uint8_t* out)
 
     unscramble(out + m_outOffset, m_smallBlockSize);
 
-    m_payloadByteCount -= m_smallBlockSize;
-    payloadOffset      += m_smallBlockSize + m_paritySymbolsPerBlock;
-    m_outOffset        += m_smallBlockSize;
+    payloadOffset += m_smallBlockSize + m_paritySymbolsPerBlock;
+    m_outOffset   += m_smallBlockSize;
   }
 
   return true;
@@ -326,6 +330,26 @@ void CIL2PRX::processType1Header(const uint8_t* in, uint8_t* out)
   }
 
   m_headerByteCount = hasPID ? 16U : 15U;
+}
+
+bool CIL2PRX::hasCRC() const
+{
+  return m_hasCRC;
+}
+
+bool CIL2PRX::checkCRC(const uint8_t* frame, const uint8_t* crc) const
+{
+  // Fix the CRC Hamming code
+  uint16_t crc1 = 0U;
+  crc1 |= m_hamming.decode(crc[0U]) << 12;
+  crc1 |= m_hamming.decode(crc[1U]) << 8;
+  crc1 |= m_hamming.decode(crc[2U]) << 4;
+  crc1 |= m_hamming.decode(crc[3U]) << 0;
+
+  // Calculate the checksum of the frame
+  uint16_t crc2 = m_crc.calculate(frame, m_headerByteCount + m_payloadByteCount);
+
+  return crc1 == crc2;
 }
 
 void CIL2PRX::unscramble(uint8_t* buffer, uint16_t length) const

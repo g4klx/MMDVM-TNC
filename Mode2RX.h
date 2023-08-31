@@ -27,10 +27,11 @@
 enum MODE2RX_STATE {
   MODE2RXS_NONE,
   MODE2RXS_HEADER,
-  MODE2RXS_PAYLOAD
+  MODE2RXS_PAYLOAD,
+  MODE2RXS_CRC
 };
 
-const uint16_t MODE2_MAX_LENGTH_SAMPLES = (1023U + MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 5U * MODE2_PAYLOAD_PARITY_BYTES) * MODE2_SYMBOLS_PER_BYTE;
+const uint16_t MODE2_MAX_LENGTH_SAMPLES = (1023U + MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 5U * MODE2_PAYLOAD_PARITY_BYTES + MODE2_CRC_LENGTH_BYTES) * MODE2_SYMBOLS_PER_BYTE;
 
 class CMode2RX {
 public:
@@ -73,9 +74,11 @@ private:
   void processNone(q15_t sample);
   void processHeader(q15_t sample);
   void processPayload(q15_t sample);
+  void processCRC(q15_t sample);
+
   bool correlateSync();
-  void calculateLevels(uint16_t start, uint16_t count);
-  void samplesToBits(uint16_t start, uint16_t count, uint8_t* buffer);
+  void calculateLevels(uint16_t startPtr, uint16_t endPtr);
+  void samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer);
 
   void initRand();
   uint8_t rand();

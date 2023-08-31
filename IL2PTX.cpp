@@ -55,6 +55,8 @@ m_rs4(4U),
 m_rs6(6U),
 m_rs8(8U),
 m_rs16(16U),
+m_crc(),
+m_hamming(),
 m_payloadByteCount(0U),
 m_payloadOffset(0U),
 m_payloadBlockCount(0U),
@@ -68,6 +70,10 @@ m_paritySymbolsPerBlock(0U)
 
 uint16_t CIL2PTX::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
 {
+#if defined(USE_IL2P_CRC)
+  uint16_t crc = m_crc.calculate(in, inLength);
+#endif
+
   bool type1 = isIL2PType1(in, inLength);
   if (type1)
     processType1Header(in, inLength, out);
@@ -86,9 +92,8 @@ uint16_t CIL2PTX::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
     scramble(out + outLength, m_largeBlockSize);
     len = encode(out + outLength, m_largeBlockSize, m_paritySymbolsPerBlock);
 
-    m_payloadByteCount -= m_largeBlockSize;
-    m_payloadOffset    += m_largeBlockSize;
-    outLength          += len;
+    m_payloadOffset += m_largeBlockSize;
+    outLength       += len;
   }
 
   for (uint8_t i = 0U; i < m_smallBlockCount; i++) {
@@ -96,10 +101,16 @@ uint16_t CIL2PTX::process(const uint8_t* in, uint16_t inLength, uint8_t* out)
     scramble(out + outLength, m_smallBlockSize);
     len = encode(out + outLength, m_smallBlockSize, m_paritySymbolsPerBlock);
 
-    m_payloadByteCount -= m_smallBlockSize;
-    m_payloadOffset    += m_smallBlockSize;
-    outLength          += len;
+    m_payloadOffset += m_smallBlockSize;
+    outLength       += len;
   }
+
+#if defined(USE_IL2P_CRC)
+  out[outLength++] = m_hamming.encode(crc >> 12);
+  out[outLength++] = m_hamming.encode(crc >> 8);
+  out[outLength++] = m_hamming.encode(crc >> 4);
+  out[outLength++] = m_hamming.encode(crc >> 0);
+#endif
 
   return outLength;
 }
@@ -150,7 +161,9 @@ void CIL2PTX::processType0Header(const uint8_t* in, uint16_t length, uint8_t* ou
 
   ::memset(out, 0x00U, IL2P_HDR_LENGTH);
 
+#if !defined(USE_IL2P_CRC)
   out[0U]  = 0x80U;     // Checksum off bit
+#endif
 
   out[2U]  = (length & 0x0200U) == 0x0200U ? 0x80U : 0x00U;
   out[3U]  = (length & 0x0100U) == 0x0100U ? 0x80U : 0x00U;
@@ -182,7 +195,10 @@ void CIL2PTX::processType1Header(const uint8_t* in, uint16_t length, uint8_t* ou
     out[i + 6U] = (in[i + 7U] >> 1) - 0x20U;  // Source callsign
   }
 
+#if !defined(USE_IL2P_CRC)
   out[0U] |= 0x80U;      // Checksum off bit
+#endif
+ 
   out[1U] |= 0x80U;      // It's a type 1 header
 
   out[12U]  = (in[13U] >> 1) & 0x0FU;  // The source SSID

@@ -20,6 +20,8 @@
 #define	IL2PRX_H
 
 #include "IL2PRS.h"
+#include "AX25CRC.h"
+#include "Hamming.h"
 
 #include <cstdint>
 
@@ -35,12 +37,17 @@ public:
 
   uint16_t getPayloadParityLength() const;
 
+  bool hasCRC() const;
+  bool checkCRC(const uint8_t* frame, const uint8_t* crc) const;
+
 private:
   CIL2PRS  m_rs2;
   CIL2PRS  m_rs4;
   CIL2PRS  m_rs6;
   CIL2PRS  m_rs8;
   CIL2PRS  m_rs16;
+  CAX25CRC m_crc;
+  CHamming m_hamming;
   uint16_t m_headerByteCount;
   uint16_t m_payloadByteCount;
   uint8_t  m_payloadBlockCount;
@@ -50,6 +57,7 @@ private:
   uint8_t  m_smallBlockCount;
   uint8_t  m_paritySymbolsPerBlock;
   uint16_t m_outOffset;
+  bool     m_hasCRC;
 
   void calculatePayloadBlockSize();
 

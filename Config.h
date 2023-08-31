@@ -36,7 +36,7 @@
 // #define EXTERNAL_OSC 19200000
 
 // Baud rate for host communication.
-#define SERIAL_SPEED	115200
+#define SERIAL_SPEED	38400
 
 // Select the initial packet mode
 // 1 = 1200 bps AFSK AX.25
@@ -69,6 +69,9 @@
 
 // Set the mode 3 transmit level (out of 255)
 #define	MODE3_TX_LEVEL	128
+
+// Use the new CRC option on IL2P transmit, receive automatically detects its use
+#define	USE_IL2P_CRC		1
 
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
