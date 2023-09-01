@@ -30,7 +30,7 @@ m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rxLevel(RX_LEVEL * 128),
 m_pPersist(P_PERSISTENCE),
-m_slotTime((SLOT_TIME / 10U) * 240U),
+m_slotTime((SLOT_TIME / 10U) * 480U),
 m_dcd(false),
 m_ledCount(0U),
 m_ledValue(true),
@@ -253,7 +253,7 @@ void CIO::setPPersist(uint8_t value)
 
 void CIO::setSlotTime(uint8_t value)
 {
-  m_slotTime = value * 240U;
+  m_slotTime = value * 480U;
 }
 
 bool CIO::canTX() const

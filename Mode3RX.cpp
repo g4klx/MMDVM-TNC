@@ -60,20 +60,12 @@ m_centreVal(0),
 m_threshold(),
 m_thresholdVal(0),
 m_countdown(0U),
-m_slotCount(0U),
-m_canTX(false),
-m_packet(),
-m_x(1U),
-m_a(0xB7U),
-m_b(0x73U),
-m_c(0xF6U)
+m_packet()
 {
   ::memset(m_rrc02State, 0x00U, 70U * sizeof(q15_t));
   m_rrc02Filter.numTaps = RRC_0_2_FILTER_LEN;
   m_rrc02Filter.pState  = m_rrc02State;
   m_rrc02Filter.pCoeffs = RRC_0_2_FILTER;
-
-  initRand();
 }
 
 void CMode3RX::reset()
@@ -86,12 +78,10 @@ void CMode3RX::reset()
   m_startPtr     = NOENDPTR;
   m_endPtr       = NOENDPTR;
   m_syncPtr      = NOENDPTR;
-  m_slotCount    = 0U;
   m_centreVal    = 0;
   m_thresholdVal = 0;
   m_countdown    = 0U;
   m_invert       = false;
-  m_canTX        = false;
 }
 
 void CMode3RX::samples(q15_t* samples, uint8_t length)
@@ -131,16 +121,6 @@ void CMode3RX::samples(q15_t* samples, uint8_t length)
     if (m_bitPtr >= MODE3_RADIO_SYMBOL_LENGTH)
       m_bitPtr = 0U;
   }
-
-  m_slotCount += RX_BLOCK_SIZE;
-  if (m_slotCount >= m_slotTime) {
-    m_slotCount = 0U;
-
-    if (m_dcd)
-      m_canTX = false;
-    else
-      m_canTX = m_pPersist >= rand();
-  }
 }
 
 void CMode3RX::processNone(q15_t sample)
@@ -150,11 +130,8 @@ void CMode3RX::processNone(q15_t sample)
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
       io.setDecode(true);
-      io.setADCDetection(true);
-
       m_averagePtr = NOAVEPTR;
-
-      m_countdown = 5U;
+      m_countdown  = 5U;
     }
   }
 
@@ -163,7 +140,6 @@ void CMode3RX::processNone(q15_t sample)
 
   if (m_countdown == 1U) {
     DEBUG5("Mode3RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
-
     m_state     = MODE3RXS_HEADER;
     m_countdown = 0U;
   }
@@ -213,17 +189,12 @@ void CMode3RX::processHeader(q15_t sample)
           serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
 
           io.setDecode(false);
-          io.setADCDetection(false);
-
           reset();
         }
       }
     } else {
       DEBUG1("Mode3RX: header is invalid");
-
       io.setDecode(false);
-      io.setADCDetection(false);
-
       reset();
     }
   }
@@ -256,18 +227,12 @@ void CMode3RX::processPayload(q15_t sample)
 
         uint16_t length = m_frame.getHeaderLength() + m_frame.getPayloadLength();
         serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
         io.setDecode(false);
-        io.setADCDetection(false);
-
         reset();
       }
     } else {
       DEBUG1("Mode3RX: payload is invalid");
-
       io.setDecode(false);
-      io.setADCDetection(false);
-
       reset();
     }
   }
@@ -290,8 +255,6 @@ void CMode3RX::processCRC(q15_t sample)
     }
 
     io.setDecode(false);
-    io.setADCDetection(false);
-
     reset();
   }
 }
@@ -482,49 +445,5 @@ void CMode3RX::samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer
     if (startPtr >= MODE3_MAX_LENGTH_SAMPLES)
       startPtr -= MODE3_MAX_LENGTH_SAMPLES;
   }
-}
-
-bool CMode3RX::canTX() const
-{
-  return m_canTX;
-}
-
-// Taken from https://www.electro-tech-online.com/threads/ultra-fast-pseudorandom-number-generator-for-8-bit.124249/
-//X ABC Algorithm Random Number Generator for 8-Bit Devices:
-//This is a small PRNG, experimentally verified to have at least a 50 million byte period
-//by generating 50 million bytes and observing that there were no overapping sequences and repeats.
-//This generator passes serial correlation, entropy , Monte Carlo Pi value, arithmetic mean,
-//And many other statistical tests. This generator may have a period of up to 2^32, but this has
-//not been verified.
-//
-// By XORing 3 bytes into the a,b, and c registers, you can add in entropy from 
-//an external source easily.
-//
-//This generator is free to use, but is not suitable for cryptography due to its short period(by //cryptographic standards) and simple construction. No attempt was made to make this generator 
-// suitable for cryptographic use.
-//
-//Due to the use of a constant counter, the generator should be resistant to latching up.
-//A significant performance gain is had in that the x variable is only ever incremented.
-//
-//Only 4 bytes of ram are needed for the internal state, and generating a byte requires 3 XORs , //2 ADDs, one bit shift right , and one increment. Difficult or slow operations like multiply, etc 
-//were avoided for maximum speed on ultra low power devices.
-
-
-void CMode3RX::initRand() //Can also be used to seed the rng with more entropy during use.
-{
-  m_a = (m_a ^ m_c ^ m_x);
-  m_b = (m_b + m_a);
-  m_c = (m_c + ((m_b >> 1) ^ m_a));
-}
-
-uint8_t CMode3RX::rand()
-{
-  m_x++;                           //x is incremented every round and is not affected by any other variable
-
-  m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
-  m_b = (m_b + m_a);               //And the use of very few instructions
-  m_c = (m_c + ((m_b >> 1) ^ m_a));  //the right shift is to ensure that high-order bits from b can affect  
-
-  return uint8_t(m_c);             //low order bits of other variables
 }
 

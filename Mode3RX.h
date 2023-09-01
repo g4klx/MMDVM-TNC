@@ -41,8 +41,6 @@ public:
 
   void samples(q15_t* samples, uint8_t length);
 
-  bool canTX() const;
-
 private:
   MODE3RX_STATE        m_state;
   arm_fir_instance_q15 m_rrc02Filter;
@@ -63,13 +61,7 @@ private:
   q15_t                m_thresholdVal;
   uint8_t              m_averagePtr;
   uint8_t              m_countdown;
-  uint32_t             m_slotCount;
-  bool                 m_canTX;
   uint8_t              m_packet[1100U];
-  uint8_t              m_x;
-  uint8_t              m_a;
-  uint8_t              m_b;
-  uint8_t              m_c;
 
   void processNone(q15_t sample);
   void processHeader(q15_t sample);
@@ -79,9 +71,6 @@ private:
   bool correlateSync();
   void calculateLevels(uint16_t startPtr, uint16_t endPtr);
   void samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer);
-
-  void initRand();
-  uint8_t rand();
 };
 
 #endif
