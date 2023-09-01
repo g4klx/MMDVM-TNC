@@ -36,12 +36,12 @@
 // #define EXTERNAL_OSC 19200000
 
 // Baud rate for host communication.
-#define SERIAL_SPEED	38400
+#define SERIAL_SPEED	115200
 
 // Select the initial packet mode
 // 1 = 1200 bps AFSK AX.25
 // 2 = 9600 bps C4FSK IL2P
-#define	INITIAL_MODE	1
+#define	INITIAL_MODE	2
 
 // TX Delay in milliseconds
 #define	TX_DELAY	300
@@ -49,8 +49,11 @@
 // P-Persistence in x/255
 #define	P_PERSISTENCE	63
 
-// Slot Time in Milliseconds
+// Slot Time in milliseconds
 #define	SLOT_TIME	100
+
+// Set Duplex, 1 for full duplex, 0 for simplex
+#define	DUPLEX		0
 
 // Select use of serial debugging
 #define	SERIAL_DEBUGGING

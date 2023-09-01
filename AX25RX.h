@@ -29,8 +29,6 @@ public:
 
   void samples(q15_t* samples, uint8_t length);
 
-  bool canTX() const;
-
 private:
   arm_fir_instance_q15 m_filter;
   q15_t                m_state[160U];    // NoTaps + BlockSize - 1, 130 + 20 - 1 plus some spare
@@ -39,15 +37,6 @@ private:
   CAX25Demodulator     m_demod3;
   uint16_t             m_lastFCS;
   uint32_t             m_count;
-  uint32_t             m_slotCount;
-  bool                 m_canTX;
-  uint8_t              m_x;
-  uint8_t              m_a;
-  uint8_t              m_b;
-  uint8_t              m_c;
-  
-  void initRand();
-  uint8_t rand();
 };
 
 #endif

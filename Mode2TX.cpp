@@ -79,11 +79,9 @@ void CMode2TX::process()
 
   // Transmit is off but we have data to send
   if (!m_tx && m_fifo.getData() > 0U) {
-    if (!m_duplex) {
-      bool tx = mode2RX.canTX();
-      if (!tx)
-        return;
-    }
+    bool tx = io.canTX();
+    if (!tx)
+      return;
   }
 
   // Are we sending the trailer?
