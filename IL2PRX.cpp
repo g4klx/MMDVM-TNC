@@ -89,10 +89,6 @@ bool CIL2PRX::processHeader(const uint8_t* in, uint8_t* out)
   // A zero indicates that a CRC is appended
   m_hasCRC = (buffer[0U] & 0x80U) == 0x00U;
 
-  // Sanity check
-  if (m_payloadByteCount > 1023U)
-    return false;
-
   m_outOffset = m_headerByteCount;
 
   calculatePayloadBlockSize();
