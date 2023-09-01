@@ -149,19 +149,19 @@ void CSerialPort::processMessage()
       break;
     case KISS_TYPE_P_PERSISTENCE:
       if (m_ptr == 2U) {
-        m_pPersist = m_buffer[1U];
+        io.setPPersist(m_buffer[1U]);
         DEBUG2("Setting p-Persistence to", m_buffer[1U]);
       }
       break;
     case KISS_TYPE_SLOT_TIME:
       if (m_ptr == 2U) {
-        m_slotTime = m_buffer[1U] * 240U;
+        io.setSlotTime(m_buffer[1U]);
         DEBUG2("Setting Slot Time to", m_buffer[1U]);
       }
       break;
     case KISS_TYPE_FULL_DUPLEX:
       if (m_ptr == 2U) {
-        m_duplex = m_buffer[1U] != 0U;
+        m_duplex = (m_buffer[1U] != 0U);
         DEBUG2("Setting Full Duplex to", m_buffer[1U]);
       }
       break;
@@ -171,7 +171,7 @@ void CSerialPort::processMessage()
         io.showMode();
         DEBUG2("Setting Mode to", m_buffer[1U]);
       } else if (m_ptr == 5U) {
-        io.setParameters(m_buffer[1U]);
+        io.setRXLevel(m_buffer[1U]);
         ax25TX.setLevel(m_buffer[2]);
         mode2TX.setLevel(m_buffer[3]);
         mode3TX.setLevel(m_buffer[4]);

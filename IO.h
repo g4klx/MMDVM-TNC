@@ -39,22 +39,20 @@ public:
   uint16_t getSpace() const;
 
   void setDecode(bool dcd);
-  void setADCDetection(bool detect);
   
   void interrupt();
 
-  void setParameters(uint8_t rxLevel);
-
-  void getOverflow(bool& adcOverflow, bool& dacOverflow);
-
-  bool hasTXOverflow();
-  bool hasRXOverflow();
+  void setRXLevel(uint8_t value);
+  void setPPersist(uint8_t value);
+  void setSlotTime(uint8_t value);
 
   uint8_t getCPU() const;
 
   void getUDID(uint8_t* buffer);
 
   void selfTest();
+
+  bool canTX() const;
 
 private:
   bool                   m_started;
@@ -63,14 +61,23 @@ private:
   CRingBuffer<uint16_t>  m_txBuffer;
 
   q15_t                  m_rxLevel;
+  uint8_t                m_pPersist;
+  uint32_t               m_slotTime;
+
+  bool                   m_dcd;
 
   uint32_t               m_ledCount;
   bool                   m_ledValue;
 
-  bool                   m_detect;
-
-  uint16_t               m_adcOverflow;
-  uint16_t               m_dacOverflow;
+  uint32_t               m_slotCount;
+  bool                   m_canTX;
+  uint8_t                m_x;
+  uint8_t                m_a;
+  uint8_t                m_b;
+  uint8_t                m_c;
+  
+  void    initRand();
+  uint8_t rand();
 
   // Hardware specific routines
   void initInt();

@@ -86,12 +86,10 @@ void CAX25TX::process()
       return;
   }
 
-  if (!m_duplex) {
-    if (m_poPtr == 0U) {
-      bool tx = ax25RX.canTX();
-      if (!tx)
-        return;
-    }
+  if (m_poPtr == 0U) {
+    bool tx = io.canTX();
+    if (!tx)
+      return;
   }
 
   uint16_t space = io.getSpace();

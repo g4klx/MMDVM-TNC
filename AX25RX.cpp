@@ -57,19 +57,11 @@ m_demod1(3),
 m_demod2(6),
 m_demod3(9),
 m_lastFCS(0U),
-m_count(0U),
-m_slotCount(0U),
-m_canTX(false),
-m_x(1U),
-m_a(0xB7U),
-m_b(0x73U),
-m_c(0xF6U)
+m_count(0U)
 {
   m_filter.numTaps = FILTER_LEN;
   m_filter.pState  = m_state;
   m_filter.pCoeffs = FILTER_COEFFS;
-
-  initRand();
 }
 
 void CAX25RX::samples(q15_t* samples, uint8_t length)
@@ -88,7 +80,7 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
       m_count   = 0U;
       serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
-    DEBUG1("Decoder 1 reported");
+    DEBUG1("AX.25 decoder 1 reported");
   }
 
   ret = m_demod2.process(output, length, frame);
@@ -98,7 +90,7 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
       m_count   = 0U;
       serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
-    DEBUG1("Decoder 2 reported");
+    DEBUG1("AX.25 decoder 2 reported");
   }
 
   ret = m_demod3.process(output, length, frame);
@@ -108,76 +100,16 @@ void CAX25RX::samples(q15_t* samples, uint8_t length)
       m_count   = 0U;
       serial.writeKISSData(KISS_TYPE_DATA, frame.m_data, frame.m_length - 2U);
     }
-    DEBUG1("Decoder 3 reported");
+    DEBUG1("AX.25 decoder 3 reported");
   }
 
-  m_slotCount += RX_BLOCK_SIZE;
-  if (m_slotCount >= m_slotTime) {
-    m_slotCount = 0U;
-
-    bool dcd1 = m_demod1.isDCD();
-    bool dcd2 = m_demod2.isDCD();
-    bool dcd3 = m_demod3.isDCD();
+  bool dcd1 = m_demod1.isDCD();
+  bool dcd2 = m_demod2.isDCD();
+  bool dcd3 = m_demod3.isDCD();
     
-    if (dcd1 || dcd2 || dcd3) {
-      if (!m_dcd) {
-        io.setDecode(true);
-        io.setADCDetection(true);
-      }
-
-      m_canTX = false;
-    } else {
-      if (m_dcd) {
-        io.setDecode(false);
-        io.setADCDetection(false);
-      }
-
-      m_canTX = m_pPersist >= rand();
-    }
-  }
-}
-
-bool CAX25RX::canTX() const
-{
-  return m_canTX;
-}
-
-// Taken from https://www.electro-tech-online.com/threads/ultra-fast-pseudorandom-number-generator-for-8-bit.124249/
-//X ABC Algorithm Random Number Generator for 8-Bit Devices:
-//This is a small PRNG, experimentally verified to have at least a 50 million byte period
-//by generating 50 million bytes and observing that there were no overapping sequences and repeats.
-//This generator passes serial correlation, entropy , Monte Carlo Pi value, arithmetic mean,
-//And many other statistical tests. This generator may have a period of up to 2^32, but this has
-//not been verified.
-//
-// By XORing 3 bytes into the a,b, and c registers, you can add in entropy from 
-//an external source easily.
-//
-//This generator is free to use, but is not suitable for cryptography due to its short period(by //cryptographic standards) and simple construction. No attempt was made to make this generator 
-// suitable for cryptographic use.
-//
-//Due to the use of a constant counter, the generator should be resistant to latching up.
-//A significant performance gain is had in that the x variable is only ever incremented.
-//
-//Only 4 bytes of ram are needed for the internal state, and generating a byte requires 3 XORs , //2 ADDs, one bit shift right , and one increment. Difficult or slow operations like multiply, etc 
-//were avoided for maximum speed on ultra low power devices.
-
-
-void CAX25RX::initRand() //Can also be used to seed the rng with more entropy during use.
-{
-  m_a = (m_a ^ m_c ^ m_x);
-  m_b = (m_b + m_a);
-  m_c = (m_c + (m_b >> 1) ^ m_a);
-}
-
-uint8_t CAX25RX::rand()
-{
-  m_x++;                           //x is incremented every round and is not affected by any other variable
-
-  m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
-  m_b = (m_b + m_a);               //And the use of very few instructions
-  m_c = (m_c + (m_b >> 1) ^ m_a);  //the right shift is to ensure that high-order bits from b can affect  
-
-  return uint8_t(m_c);             //low order bits of other variables
+  if (dcd1 || dcd2 || dcd3)
+    io.setDecode(true);
+  else
+    io.setDecode(false);
 }
 

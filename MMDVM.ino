@@ -20,15 +20,10 @@
 #include "Config.h"
 #include "Globals.h"
 
-// Global variables
-bool m_duplex       = false;
-uint32_t m_slotTime = (SLOT_TIME / 10U) * 240U;
-uint8_t  m_pPersist = P_PERSISTENCE;
-
 uint8_t m_mode = INITIAL_MODE;
 
-bool m_dcd = false;
-bool m_tx  = false;
+bool m_duplex = (DUPLEX == 1);
+bool m_tx = false;
 
 CAX25RX ax25RX;
 CAX25TX ax25TX;

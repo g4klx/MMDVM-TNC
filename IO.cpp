@@ -29,14 +29,22 @@ m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rxLevel(RX_LEVEL * 128),
+m_pPersist(P_PERSISTENCE),
+m_slotTime((SLOT_TIME / 10U) * 240U),
+m_dcd(false),
 m_ledCount(0U),
 m_ledValue(true),
-m_detect(false),
-m_adcOverflow(0U),
-m_dacOverflow(0U)
+m_slotCount(0U),
+m_canTX(false),
+m_x(1U),
+m_a(0xB7U),
+m_b(0x73U),
+m_c(0xF6U)
 {
+  initRand();
+
   initInt();
-  
+
   selfTest();
 }
 
@@ -130,16 +138,24 @@ void CIO::process()
   }
 
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
-    q15_t    samples[RX_BLOCK_SIZE];
-    uint8_t  control[RX_BLOCK_SIZE];
+    // Only do the CSMA calculations when in simplex mode
+    if (!m_duplex) {
+      if (m_dcd) {
+        m_slotCount = 0U;
+      } else {
+        m_slotCount += RX_BLOCK_SIZE;
+        if (m_slotCount >= m_slotTime) {
+          m_slotCount = 0U;
+          m_canTX = (m_pPersist >= rand());
+        }
+      }
+    }
+
+    q15_t samples[RX_BLOCK_SIZE];
 
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
       uint16_t sample;
       m_rxBuffer.get(sample);
-
-      // Detect ADC overflow
-      if (m_detect && (sample == 0U || sample == 4095U))
-        m_adcOverflow++;
 
       q15_t res1 = q15_t(sample) - DC_OFFSET;
       q31_t res2 = res1 * m_rxLevel;
@@ -176,11 +192,6 @@ void CIO::write(q15_t* samples, uint16_t length)
 
   for (uint16_t i = 0U; i < length; i++) {
     uint16_t res = uint16_t(samples[i] + DC_OFFSET);
-
-    // Detect DAC overflow
-    if (res > 4095U)
-      m_dacOverflow++;
-
     m_txBuffer.put(res);
   }
 }
@@ -230,32 +241,68 @@ void CIO::setDecode(bool dcd)
   m_dcd = dcd;
 }
 
-void CIO::setADCDetection(bool detect)
+void CIO::setRXLevel(uint8_t value)
 {
-  m_detect = detect;
+  m_rxLevel = q15_t(value * 128);
 }
 
-void CIO::setParameters(uint8_t rxLevel)
+void CIO::setPPersist(uint8_t value)
 {
-  m_rxLevel = q15_t(rxLevel * 128);
+  m_pPersist = value;
 }
 
-void CIO::getOverflow(bool& adcOverflow, bool& dacOverflow)
+void CIO::setSlotTime(uint8_t value)
 {
-  adcOverflow = m_adcOverflow > 0U;
-  dacOverflow = m_dacOverflow > 0U;
-
-  m_adcOverflow = 0U;
-  m_dacOverflow = 0U;
+  m_slotTime = value * 240U;
 }
 
-bool CIO::hasTXOverflow()
+bool CIO::canTX() const
 {
-  return m_txBuffer.hasOverflowed();
+  if (m_duplex)
+    return true;
+
+  if (m_dcd)
+    return false;
+
+  return m_canTX;
 }
 
-bool CIO::hasRXOverflow()
+// Taken from https://www.electro-tech-online.com/threads/ultra-fast-pseudorandom-number-generator-for-8-bit.124249/
+//X ABC Algorithm Random Number Generator for 8-Bit Devices:
+//This is a small PRNG, experimentally verified to have at least a 50 million byte period
+//by generating 50 million bytes and observing that there were no overapping sequences and repeats.
+//This generator passes serial correlation, entropy , Monte Carlo Pi value, arithmetic mean,
+//And many other statistical tests. This generator may have a period of up to 2^32, but this has
+//not been verified.
+//
+// By XORing 3 bytes into the a,b, and c registers, you can add in entropy from 
+//an external source easily.
+//
+//This generator is free to use, but is not suitable for cryptography due to its short period(by //cryptographic standards) and simple construction. No attempt was made to make this generator 
+// suitable for cryptographic use.
+//
+//Due to the use of a constant counter, the generator should be resistant to latching up.
+//A significant performance gain is had in that the x variable is only ever incremented.
+//
+//Only 4 bytes of ram are needed for the internal state, and generating a byte requires 3 XORs , //2 ADDs, one bit shift right , and one increment. Difficult or slow operations like multiply, etc 
+//were avoided for maximum speed on ultra low power devices.
+
+
+void CIO::initRand() //Can also be used to seed the rng with more entropy during use.
 {
-  return m_rxBuffer.hasOverflowed();
+  m_a = (m_a ^ m_c ^ m_x);
+  m_b = (m_b + m_a);
+  m_c = (m_c + (m_b >> 1) ^ m_a);
+}
+
+uint8_t CIO::rand()
+{
+  m_x++;                           //x is incremented every round and is not affected by any other variable
+
+  m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
+  m_b = (m_b + m_a);               //And the use of very few instructions
+  m_c = (m_c + (m_b >> 1) ^ m_a);  //the right shift is to ensure that high-order bits from b can affect  
+
+  return uint8_t(m_c);             //low order bits of other variables
 }
 
