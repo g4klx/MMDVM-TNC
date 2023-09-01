@@ -67,9 +67,6 @@
 // Set the mode 2 transmit level (out of 255)
 #define	MODE2_TX_LEVEL	128
 
-// Use the new CRC option on IL2P transmit, receive automatically detects its use
-#define	USE_IL2P_CRC		1
-
 // Use pins to output the current mode via LEDs
 #define MODE_LEDS
 
