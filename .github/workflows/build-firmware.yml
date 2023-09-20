@@ -56,8 +56,6 @@ jobs:
 
           // Use pins to output the current mode via LEDs
           #define MODE_LEDS" > Config.h
-      - name: cat
-        run: cat Config.h
       - name: make dvm
         run: make dvm
       - name: Archive built firmware
