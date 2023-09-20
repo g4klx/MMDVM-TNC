@@ -4,7 +4,7 @@ on:
     branches:
       - master
 jobs:
-  Explore-GitHub-Actions:
+  Build-MMDVM-TNC:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
