@@ -1,0 +1,19 @@
+name: Build firmware
+on:
+  push:
+    branches:
+      - master
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: git submodule setup
+        run: |
+          git submodule init
+          git submodule update
+      - name: Install dependencies
+        run: apt install -qy git build-essential gcc-arm-none-eabi
+      - name: make dvm
+        run: make dvm
