@@ -17,3 +17,8 @@ jobs:
         run: sudo apt install -qy git build-essential gcc-arm-none-eabi
       - name: make dvm
         run: make dvm
+      - name: Archive built firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: mmdvm_f4.hex
+          path: bin/mmdvm_f4.hex
