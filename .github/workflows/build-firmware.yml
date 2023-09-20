@@ -15,6 +15,49 @@ jobs:
           git submodule update
       - name: Install dependencies
         run: sudo apt install -qy git build-essential gcc-arm-none-eabi
+      - name: Update Config.h
+        run: |
+          echo "#define CONFIG_H
+          #define EXTERNAL_OSC 12000000
+          #define STM32F4_NUCLEO_MORPHO_HEADER
+          #define SERIAL_SPEED    115200
+
+          // Select the initial packet mode
+          // 1 = 1200 bps AFSK AX.25
+          // 2 = 9600 bps C4FSK IL2P
+          #define INITIAL_MODE    2
+
+          // TX Delay in milliseconds
+          #define TX_DELAY        300
+
+          // P-Persistence in x/255
+          #define P_PERSISTENCE   63
+
+          // Slot Time in milliseconds
+          #define SLOT_TIME       100
+
+          // Set Duplex, 1 for full duplex, 0 for simplex
+          #define DUPLEX          0
+
+          // Select use of serial debugging
+          #define SERIAL_DEBUGGING
+
+          // Baud rate for serial debugging.
+          #define DEBUGGING_SPEED 38400
+
+          // Set the receive level (out of 255)
+          #define RX_LEVEL        128
+
+          // Set the mode 1 transmit level (out of 255)
+          #define MODE1_TX_LEVEL  128
+
+          // Set the mode 2 transmit level (out of 255)
+          #define MODE2_TX_LEVEL  128
+
+          // Use pins to output the current mode via LEDs
+          #define MODE_LEDS" > Config.h
+      - name: cat
+        run: cat Config.h
       - name: make dvm
         run: make dvm
       - name: Archive built firmware
