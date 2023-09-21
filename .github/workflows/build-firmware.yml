@@ -63,3 +63,11 @@ jobs:
         with:
           name: mmdvm_f4.hex
           path: bin/mmdvm_f4.hex
+      - uses: keithweaver/aws-s3-github-action@v1.0.0
+        with:
+          command: cp
+          source: bin/mmdvm_f4.hex
+          destination: s3://mmdvm-tnc/mmdvm_f4.hex
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: eu-west-2
