@@ -37,7 +37,7 @@ jobs:
           #define SLOT_TIME       100
 
           // Set Duplex, 1 for full duplex, 0 for simplex
-          #define DUPLEX          1
+          #define DUPLEX          0
 
           // Select use of serial debugging
           #define SERIAL_DEBUGGING
