@@ -56,18 +56,39 @@ jobs:
 
           // Use pins to output the current mode via LEDs
           #define MODE_LEDS" > Config.h
-      - name: make dvm
+      - name: Build simplex firmware
         run: make dvm
       - name: Archive built firmware
         uses: actions/upload-artifact@v3
         with:
-          name: mmdvm_f4.hex
+          name: mmdvm_f4_simplex.hex
           path: bin/mmdvm_f4.hex
       - uses: keithweaver/aws-s3-github-action@v1.0.0
         with:
           command: cp
           source: bin/mmdvm_f4.hex
-          destination: s3://mmdvm-tnc/mmdvm_f4.hex
+          destination: s3://mmdvm-tnc/mmdvm_f4_simplex.hex
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: eu-west-2
+      - name: Reconfigure duplex 1
+        run: sed -i 's/DUPLEX          0/DUPLEX          1/g' Config.h
+      - name: cat
+        run: cat Config.h
+      - name: Build duplex firmware 
+        run: |
+          make clean
+          make dvm
+      - name: Archive built firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: mmdvm_f4_duplex.hex
+          path: bin/mmdvm_f4.hex
+      - uses: keithweaver/aws-s3-github-action@v1.0.0
+        with:
+          command: cp
+          source: bin/mmdvm_f4.hex
+          destination: s3://mmdvm-tnc/mmdvm_f4_duplex.hex
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: eu-west-2
