@@ -73,8 +73,6 @@ jobs:
           aws_region: eu-west-2
       - name: Reconfigure duplex 1
         run: sed -i 's/DUPLEX          0/DUPLEX          1/g' Config.h
-      - name: cat
-        run: cat Config.h
       - name: Build duplex firmware 
         run: |
           make clean
