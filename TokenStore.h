@@ -18,36 +18,26 @@
 
 #include "Config.h"
 
-#if !defined(MODE2TX_H)
-#define  MODE2TX_H
+#if !defined(TOKENSTORE_H)
+#define  TOKENSTORE_H
 
-#include "IL2PTX.h"
-#include "RingBuffer.h"
-#include "TokenStore.h"
+#include <cstdint>
 
-class CMode2TX {
+class CTokenStore {
 public:
-  CMode2TX();
+  CTokenStore();
 
-  uint8_t writeData(const uint8_t* data, uint16_t length);
-  uint8_t writeDataAck(uint16_t token, const uint8_t* data, uint16_t length);
+  bool add(uint16_t token);
 
-  void process();
+  void reset();
+  bool next(uint16_t& token);
 
-  void setTXDelay(uint8_t value);
-  void setLevel(uint8_t value);
+  void clear();
 
 private:
-  CRingBuffer<uint8_t>             m_fifo;
-  uint8_t                          m_playOut;
-  arm_fir_interpolate_instance_q15 m_modFilter;
-  q15_t                            m_modState[16U];    // blockSize + phaseLength - 1, 4 + 9 - 1 plus some spare
-  CIL2PTX                          m_frame;
-  q15_t                            m_level;
-  uint16_t                         m_txDelay;
-  CTokenStore                      m_tokens;
-
-  void writeByte(uint8_t c);
+  uint16_t* m_store;
+  uint8_t   m_count;
+  uint8_t   m_ptr;
 };
 
 #endif
