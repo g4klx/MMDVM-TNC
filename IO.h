@@ -55,8 +55,6 @@ public:
   bool canTX() const;
 
 private:
-  bool                   m_started;
-
   CRingBuffer<uint16_t>  m_rxBuffer;
   CRingBuffer<uint16_t>  m_txBuffer;
 
