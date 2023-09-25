@@ -40,11 +40,6 @@ m_a(0xB7U),
 m_b(0x73U),
 m_c(0xF6U)
 {
-  initRand();
-
-  initInt();
-
-  selfTest();
 }
 
 void CIO::selfTest()
@@ -99,6 +94,12 @@ void CIO::selfTest()
 
 void CIO::start()
 {
+  initRand();
+
+  initInt();
+
+  selfTest();
+
   startInt();
 }
 

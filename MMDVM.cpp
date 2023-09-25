@@ -40,6 +40,8 @@ CIO io;
 void setup()
 {
   serial.start();
+
+  io.start();
 }
 
 void loop()
