@@ -130,6 +130,8 @@ void CIO::interrupt()
     sample = ADC0_RA;
     m_rxBuffer.put(sample);
   }
+
+  m_ledCount++;
 }
 
 void CIO::setLEDInt(bool on)

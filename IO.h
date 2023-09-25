@@ -64,7 +64,7 @@ private:
 
   bool                   m_dcd;
 
-  uint32_t               m_ledCount;
+  volatile uint32_t      m_ledCount;
   bool                   m_ledValue;
 
   uint32_t               m_slotCount;

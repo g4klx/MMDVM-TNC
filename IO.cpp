@@ -108,7 +108,6 @@ void CIO::process()
 #if defined(CONSTANT_SRV_LED)
   setLEDInt(true);
 #else
-  m_ledCount++;
   if (m_ledCount >= 24000U) {
     m_ledCount = 0U;
     m_ledValue = !m_ledValue;

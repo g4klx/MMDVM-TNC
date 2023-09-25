@@ -219,30 +219,32 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-   uint16_t sample = 0U;
+  uint16_t sample = 0U;
 
-   m_txBuffer.get(sample);
+  m_txBuffer.get(sample);
 
-   // Send the value to the DAC
+  // Send the value to the DAC
 #if defined(STM32F4_NUCLEO) && defined(STM32F4_NUCLEO_ARDUINO_HEADER)
-   DAC_SetChannel2Data(DAC_Align_12b_R, sample);
+  DAC_SetChannel2Data(DAC_Align_12b_R, sample);
 #else
-   DAC_SetChannel1Data(DAC_Align_12b_R, sample);
+  DAC_SetChannel1Data(DAC_Align_12b_R, sample);
 #endif
 
-   // Read value from ADC1 and ADC2
-   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {
-      // shouldn't be still in reset at this point so null the sample value?
-      sample  = 0U;
-   } else {
-      sample  = ADC_GetConversionValue(ADC1);
-   }
+  // Read value from ADC1 and ADC2
+  if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {
+    // shouldn't be still in reset at this point so null the sample value?
+    sample  = 0U;
+  } else {
+    sample  = ADC_GetConversionValue(ADC1);
+  }
 
-   // trigger next ADC1
-   ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
-   ADC_SoftwareStartConv(ADC1);
+  // trigger next ADC1
+  ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
+  ADC_SoftwareStartConv(ADC1);
 
-   m_rxBuffer.put(sample);
+  m_rxBuffer.put(sample);
+
+  m_ledCount++;
 }
 
 void CIO::setLEDInt(bool on)
