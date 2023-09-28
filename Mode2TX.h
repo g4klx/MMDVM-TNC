@@ -21,10 +21,9 @@
 #if !defined(MODE2TX_H)
 #define  MODE2TX_H
 
-#include <vector>
-
 #include "IL2PTX.h"
 #include "RingBuffer.h"
+#include "TokenStore.h"
 
 class CMode2TX {
 public:
@@ -46,7 +45,7 @@ private:
   CIL2PTX                          m_frame;
   q15_t                            m_level;
   uint16_t                         m_txDelay;
-  std::vector<uint16_t>            m_tokens;
+  CTokenStore                      m_tokens;
 
   void writeByte(uint8_t c);
 };

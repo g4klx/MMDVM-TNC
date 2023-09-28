@@ -69,13 +69,17 @@ void CMode2TX::process()
   if (!m_duplex) {
     // Nothing left to transmit, send the packet tokens back
     if (!m_tx && m_fifo.getData() == 0U) {
-      for (const auto& token : m_tokens)
+      m_tokens.reset();
+      uint16_t token;
+      while (m_tokens.next(token))
         serial.writeKISSAck(token);
       m_tokens.clear();
     }
   } else {
     // Send the tokens back immediately as the packets can be transmitted immediately too
-    for (const auto& token : m_tokens)
+    m_tokens.reset();
+    uint16_t token;
+    while (m_tokens.next(token))
       serial.writeKISSAck(token);
     m_tokens.clear();
   }
@@ -106,6 +110,7 @@ void CMode2TX::process()
       uint8_t c;
       bool ok = m_fifo.get(c);
       if (!ok) {
+        DEBUG1("Mode2TX: starting the play out data");
         m_playOut = 12U;
         return;
       }
@@ -127,17 +132,20 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
 
   // Add the preamble symbols
   if (!m_tx && (m_fifo.getData() == 0U)) {
+    DEBUG1("Mode2TX: adding the preamble");
     for (uint16_t i = 0U; i < m_txDelay; i++)
       m_fifo.put(MODE2_PREAMBLE_BYTE);
   }
 
   // Add the IL2P sync vector
+  DEBUG1("Mode2TX: adding the IL2P sync vector");
   for (uint8_t i = 0U; i < MODE2_SYNC_LENGTH_BYTES; i++)
     m_fifo.put(MODE2_SYNC_BYTES[i]);
 
   uint8_t buffer[2000U];
   uint16_t len = m_frame.process(data, length, buffer);
 
+  DEBUG2("Mode2TX: adding the IL2P data", len);
   for (uint16_t i = 0U; i < len; i++)
     m_fifo.put(buffer[i]);
 
@@ -146,7 +154,7 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
 
 uint8_t CMode2TX::writeDataAck(uint16_t token, const uint8_t* data, uint16_t length)
 {
-  m_tokens.push_back(token);
+  m_tokens.add(token);
 
   return writeData(data, length);
 }

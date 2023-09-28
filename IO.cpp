@@ -22,10 +22,9 @@
 #include "Globals.h"
 #include "IO.h"
 
-const uint16_t DC_OFFSET = 2048U;
+const q15_t DC_OFFSET = 2048;
 
 CIO::CIO() :
-m_started(false),
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rxLevel(RX_LEVEL * 128),
@@ -41,11 +40,6 @@ m_a(0xB7U),
 m_b(0x73U),
 m_c(0xF6U)
 {
-  initRand();
-
-  initInt();
-
-  selfTest();
 }
 
 void CIO::selfTest()
@@ -100,35 +94,26 @@ void CIO::selfTest()
 
 void CIO::start()
 {
-  if (m_started)
-    return;
+  initRand();
+
+  initInt();
+
+  selfTest();
 
   startInt();
-
-  m_started = true;
 }
 
 void CIO::process()
 {
-  m_ledCount++;
-  if (m_started) {
 #if defined(CONSTANT_SRV_LED)
-    setLEDInt(true);
+  setLEDInt(true);
 #else
-    if (m_ledCount >= 48000U) {
-      m_ledCount = 0U;
-      m_ledValue = !m_ledValue;
-      setLEDInt(m_ledValue);
-    }
-#endif
-  } else {
-    if (m_ledCount >= 480000U) {
-      m_ledCount = 0U;
-      m_ledValue = !m_ledValue;
-      setLEDInt(m_ledValue);
-    }
-    return;
+  if (m_ledCount >= 48000U) {
+    m_ledCount = 0U;
+    m_ledValue = !m_ledValue;
+    setLEDInt(m_ledValue);
   }
+#endif
 
   // Switch off the transmitter if needed
   if (m_txBuffer.getData() == 0U && m_tx) {
@@ -180,9 +165,6 @@ void CIO::process()
 
 void CIO::write(q15_t* samples, uint16_t length)
 {
-  if (!m_started)
-    return;
-
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;

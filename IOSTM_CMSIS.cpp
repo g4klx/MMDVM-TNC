@@ -322,6 +322,8 @@ void CIO::interrupt()
     sample = ADC1->DR;   // read conversion result; EOC is cleared by this read
     m_rxBuffer.put(sample);
   }
+
+  m_ledCount++;
 }
 
 void CIO::setLEDInt(bool on)

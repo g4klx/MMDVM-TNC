@@ -1,6 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
- *   Copyright (C) 2016 by Colin Durbridge G4EML
+ *   Copyright (C) 2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,49 +16,50 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "Config.h"
-#include "Globals.h"
+#include "TokenStore.h"
 
-uint8_t m_mode = INITIAL_MODE;
+#include <cstddef>
 
-bool m_duplex = (DUPLEX == 1);
-bool m_tx = false;
+const uint8_t MAX_TOKENS = 20U;
 
-CAX25RX ax25RX;
-CAX25TX ax25TX;
-
-CMode2TX mode2TX;
-CMode2RX mode2RX;
-
-CMode3TX mode3TX;
-CMode3RX mode3RX;
-
-CSerialPort serial;
-CIO io;
-
-void setup()
+CTokenStore::CTokenStore() :
+m_store(NULL),
+m_count(0U),
+m_ptr(0U)
 {
-  io.start();
-
-  serial.start();
+  m_store = new uint16_t[MAX_TOKENS];
 }
 
-void loop()
+bool CTokenStore::add(uint16_t token)
 {
-  serial.process();
-  
-  io.process();
+  if (m_count == MAX_TOKENS)
+    return false;
 
-  // The following is for transmitting
-  switch (m_mode) {
-    case 1U:
-      ax25TX.process();
-      break;
-    case 2U:
-      mode2TX.process();
-      break;
-    case 3U:
-      mode3TX.process();
-      break;  }
+  m_store[m_count] = token;
+  m_count++;
+
+  return true;
+}
+
+void CTokenStore::reset()
+{
+  m_ptr = 0U;
+}
+
+bool CTokenStore::next(uint16_t& token)
+{
+  if (m_ptr >= m_count)
+    return false;
+
+  token = m_store[m_ptr];
+  m_ptr++;
+
+  return true;
+}
+
+void CTokenStore::clear()
+{
+  m_count = 0U;
+  m_ptr   = 0U;
 }
 

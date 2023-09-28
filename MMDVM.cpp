@@ -42,6 +42,8 @@ CIO io;
 
 void setup()
 {
+  io.start();
+
   serial.start();
 }
 

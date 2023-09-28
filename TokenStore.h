@@ -1,6 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
- *   Copyright (C) 2016 by Colin Durbridge G4EML
+ *   Copyright (C) 2023 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,48 +17,28 @@
  */
 
 #include "Config.h"
-#include "Globals.h"
 
-uint8_t m_mode = INITIAL_MODE;
+#if !defined(TOKENSTORE_H)
+#define  TOKENSTORE_H
 
-bool m_duplex = (DUPLEX == 1);
-bool m_tx = false;
+#include <cstdint>
 
-CAX25RX ax25RX;
-CAX25TX ax25TX;
+class CTokenStore {
+public:
+  CTokenStore();
 
-CMode2TX mode2TX;
-CMode2RX mode2RX;
+  bool add(uint16_t token);
 
-CMode3TX mode3TX;
-CMode3RX mode3RX;
+  void reset();
+  bool next(uint16_t& token);
 
-CSerialPort serial;
-CIO io;
+  void clear();
 
-void setup()
-{
-  io.start();
+private:
+  uint16_t* m_store;
+  uint8_t   m_count;
+  uint8_t   m_ptr;
+};
 
-  serial.start();
-}
-
-void loop()
-{
-  serial.process();
-  
-  io.process();
-
-  // The following is for transmitting
-  switch (m_mode) {
-    case 1U:
-      ax25TX.process();
-      break;
-    case 2U:
-      mode2TX.process();
-      break;
-    case 3U:
-      mode3TX.process();
-      break;  }
-}
+#endif
 

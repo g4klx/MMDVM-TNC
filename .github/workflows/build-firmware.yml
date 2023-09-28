@@ -1,0 +1,92 @@
+name: Build firmware
+on:
+  push:
+    branches:
+      - master
+jobs:
+  Build-MMDVM-TNC:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: git submodule setup
+        run: |
+          git submodule init
+          git submodule update
+      - name: Install dependencies
+        run: sudo apt install -qy git build-essential gcc-arm-none-eabi
+      - name: Update Config.h
+        run: |
+          echo "#define CONFIG_H
+          #define EXTERNAL_OSC 12000000
+          #define STM32F4_NUCLEO_MORPHO_HEADER
+          #define SERIAL_SPEED    115200
+
+          // Select the initial packet mode
+          // 1 = 1200 bps AFSK AX.25
+          // 2 = 9600 bps C4FSK IL2P
+          #define INITIAL_MODE    2
+
+          // TX Delay in milliseconds
+          #define TX_DELAY        300
+
+          // P-Persistence in x/255
+          #define P_PERSISTENCE   63
+
+          // Slot Time in milliseconds
+          #define SLOT_TIME       100
+
+          // Set Duplex, 1 for full duplex, 0 for simplex
+          #define DUPLEX          0
+
+          // Select use of serial debugging
+          #define SERIAL_DEBUGGING
+
+          // Baud rate for serial debugging.
+          #define DEBUGGING_SPEED 38400
+
+          // Set the receive level (out of 255)
+          #define RX_LEVEL        128
+
+          // Set the mode 1 transmit level (out of 255)
+          #define MODE1_TX_LEVEL  128
+
+          // Set the mode 2 transmit level (out of 255)
+          #define MODE2_TX_LEVEL  128
+
+          // Use pins to output the current mode via LEDs
+          #define MODE_LEDS" > Config.h
+      - name: Build simplex firmware
+        run: make dvm
+      - name: Archive built firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: mmdvm_f4_simplex.hex
+          path: bin/mmdvm_f4.hex
+      - uses: keithweaver/aws-s3-github-action@v1.0.0
+        with:
+          command: cp
+          source: bin/mmdvm_f4.hex
+          destination: s3://mmdvm-tnc/mmdvm_f4_simplex.hex
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: eu-west-2
+      - name: Reconfigure duplex 1
+        run: sed -i 's/DUPLEX          0/DUPLEX          1/g' Config.h
+      - name: Build duplex firmware 
+        run: |
+          make clean
+          make dvm
+      - name: Archive built firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: mmdvm_f4_duplex.hex
+          path: bin/mmdvm_f4.hex
+      - uses: keithweaver/aws-s3-github-action@v1.0.0
+        with:
+          command: cp
+          source: bin/mmdvm_f4.hex
+          destination: s3://mmdvm-tnc/mmdvm_f4_duplex.hex
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: eu-west-2
