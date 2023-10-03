@@ -121,7 +121,7 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint16_t sample = 0U;
+  uint16_t sample = DC_OFFSET;
 
   m_txBuffer.get(sample);
   *(int16_t *)&(DAC0_DAT0L) = sample;

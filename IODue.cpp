@@ -156,7 +156,7 @@ void CIO::startInt()
 void CIO::interrupt()
 {
   if ((ADC->ADC_ISR & ADC_ISR_EOC_Chan) == ADC_ISR_EOC_Chan) {    // Ensure there was an End-of-Conversion and we read the ISR reg
-    uint16_t sample = 0U;
+    uint16_t sample = DC_OFFSET;
 
     m_txBuffer.get(sample);
     DACC->DACC_CDR = sample;
