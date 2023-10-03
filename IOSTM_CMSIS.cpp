@@ -306,7 +306,7 @@ void CIO::startInt()
 
 void CIO::interrupt()
 {
-  uint16_t sample = 0U;
+  uint16_t sample = DC_OFFSET;
 
   bitband_t eoc = (bitband_t)BITBAND_PERIPH(&ADC1->SR, ADC_SR_EOS_Pos);
   bitband_t adon = (bitband_t)BITBAND_PERIPH(&ADC1->CR2, ADC_CR2_ADON_Pos);
