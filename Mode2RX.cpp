@@ -248,6 +248,16 @@ void CMode2RX::processCRC(q15_t sample)
     samplesToBits(m_startPtr, m_endPtr, crc);
 
     bool ok = m_frame.checkCRC(m_packet, crc);
+    if (ok)
+      DEBUG1("Mode2RX: frame CRC is valid");
+    else
+      DEBUG1("Mode2RX: frame CRC is invalid");
+
+    uint16_t length = m_frame.getHeaderLength() + m_frame.getPayloadLength();
+    serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
+
+/*
+    bool ok = m_frame.checkCRC(m_packet, crc);
     if (ok) {
       DEBUG1("Mode2RX: frame CRC is valid");
 
@@ -256,7 +266,7 @@ void CMode2RX::processCRC(q15_t sample)
     } else {
       DEBUG1("Mode2RX: frame CRC is invalid");
     }
-
+*/
     io.setDecode(false);
     reset();
   }
