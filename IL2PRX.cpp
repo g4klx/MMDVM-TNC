@@ -345,6 +345,9 @@ bool CIL2PRX::checkCRC(const uint8_t* frame, const uint8_t* crc) const
   // Calculate the checksum of the frame
   uint16_t crc2 = m_crc.calculate(frame, m_headerByteCount + m_payloadByteCount);
 
+  if (crc1 != crc2)
+    DEBUG3("IL2PRX: bad checksum", crc1, crc2);
+
   return crc1 == crc2;
 }
 

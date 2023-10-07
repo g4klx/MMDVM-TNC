@@ -159,6 +159,12 @@ void CSerialPort::processMessage()
         DEBUG2("Setting Slot Time to", m_buffer[1U]);
       }
       break;
+    case KISS_TYPE_TX_TAIL:
+      if (m_ptr == 2U) {
+        mode2TX.setTXTail(m_buffer[1U]);
+        DEBUG2("Setting TX Tail to", m_buffer[1U]);
+      }
+      break;
     case KISS_TYPE_FULL_DUPLEX:
       if (m_ptr == 2U) {
         m_duplex = (m_buffer[1U] != 0U);
