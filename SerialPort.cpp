@@ -162,6 +162,7 @@ void CSerialPort::processMessage()
     case KISS_TYPE_TX_TAIL:
       if (m_ptr == 2U) {
         mode2TX.setTXTail(m_buffer[1U]);
+        mode3TX.setTXTail(m_buffer[1U]);
         DEBUG2("Setting TX Tail to", m_buffer[1U]);
       }
       break;
