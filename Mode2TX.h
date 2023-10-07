@@ -35,6 +35,7 @@ public:
   void process();
 
   void setTXDelay(uint8_t value);
+  void setTXTail(uint8_t value);
   void setLevel(uint8_t value);
 
 private:
@@ -45,6 +46,7 @@ private:
   CIL2PTX                          m_frame;
   q15_t                            m_level;
   uint16_t                         m_txDelay;
+  uint16_t                         m_txTail;
   CTokenStore                      m_tokens;
 
   void writeByte(uint8_t c);

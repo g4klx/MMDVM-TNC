@@ -51,6 +51,7 @@ m_modState(),
 m_frame(),
 m_level(MODE2_TX_LEVEL * 128),
 m_txDelay((TX_DELAY / 10U) * 12U),
+m_txTail((TX_TAIL / 10U) * 12U),
 m_tokens()
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
@@ -108,7 +109,7 @@ void CMode2TX::process()
       bool ok = m_fifo.get(c);
       if (!ok) {
         DEBUG1("Mode2TX: starting the play out data");
-        m_playOut = 12U;
+        m_playOut = m_txTail;
         return;
       }
 
@@ -194,6 +195,11 @@ void CMode2TX::writeByte(uint8_t c)
 void CMode2TX::setTXDelay(uint8_t value)
 {
   m_txDelay = value * 12U;
+}
+  
+void CMode2TX::setTXTail(uint8_t value)
+{
+  m_txTail = value * 12U;
 }
   
 void CMode2TX::setLevel(uint8_t value)

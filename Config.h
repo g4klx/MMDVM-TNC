@@ -46,6 +46,9 @@
 // TX Delay in milliseconds
 #define	TX_DELAY	300
 
+// TX Tail in milliseconds
+#define	TX_TAIL		50
+
 // P-Persistence in x/255
 #define	P_PERSISTENCE	63
 
