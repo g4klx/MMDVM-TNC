@@ -111,7 +111,7 @@ void CMode2TX::process()
       uint8_t c;
       bool ok = m_fifo.get(c);
       if (!ok) {
-        DEBUG1("Mode2TX: starting the play out data");
+        DEBUG2("Mode2TX: starting the play out data", m_txTail);
         m_playOut = m_txTail;
         return;
       }
@@ -133,7 +133,7 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
 
   // Add the preamble symbols
   if (!m_tx && (m_fifo.getData() == 0U)) {
-    DEBUG1("Mode2TX: adding the preamble");
+    DEBUG2("Mode2TX: adding the preamble", m_txDelay);
     for (uint16_t i = 0U; i < m_txDelay; i++)
       m_fifo.put(MODE2_PREAMBLE_BYTE);
   }

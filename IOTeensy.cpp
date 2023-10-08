@@ -114,7 +114,7 @@ void CIO::startInt()
   PDB0_SC    |= PDB_SC_SWTRIG;                                        // Software trigger (reset and restart counter)
 #endif
 
-  digitalWrite(PIN_PTT,    m_pttInvert ? HIGH : LOW);
+  digitalWrite(PIN_PTT,    LOW);
   digitalWrite(PIN_COSLED, LOW);
   digitalWrite(PIN_LED,    HIGH);
 }

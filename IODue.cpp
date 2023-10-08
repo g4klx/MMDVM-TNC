@@ -148,7 +148,7 @@ void CIO::startInt()
   DACC->DACC_IDR  = 0xFFFFFFFF;               // No interrupts
   DACC->DACC_CHER = DACC_CHER_Chan;           // Enable channel
 
-  digitalWrite(PIN_PTT, m_pttInvert ? HIGH : LOW);
+  digitalWrite(PIN_PTT,    LOW);
   digitalWrite(PIN_COSLED, LOW);
   digitalWrite(PIN_LED,    HIGH);
 }
