@@ -24,6 +24,7 @@
 const uint8_t MODE2_RADIO_SYMBOL_LENGTH = 5U;      // At 24 kHz sample rate
 
 const uint8_t MODE2_PREAMBLE_BYTE = 0x77U;
+const uint8_t MODE2_TRAILER_BYTE  = 0x00U;
 
 const uint8_t MODE2_SYMBOLS_PER_BYTE = 4U;
 

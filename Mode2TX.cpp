@@ -93,7 +93,7 @@ void CMode2TX::process()
   if (m_playOut > 0U) {
     uint16_t space = io.getSpace();
     while ((m_playOut > 0U) && (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH))) {
-      writeByte(MODE2_PREAMBLE_BYTE);
+      writeByte(MODE2_TRAILER_BYTE);
 
       space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
       m_playOut--;
