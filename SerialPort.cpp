@@ -332,7 +332,7 @@ void CSerialPort::writeDebugInt(int16_t num)
 
   reverse(buffer, pos);
 
-  writeDebug(buffer);
+  writeDebugInt(buffer);
 }
 
 void CSerialPort::reverse(char* buffer, uint8_t length) const
