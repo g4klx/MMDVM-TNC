@@ -51,6 +51,7 @@ private:
   std::vector<uint16_t>            m_tokens;
 
   void writeByte(uint8_t c);
+  void writeSilence();
 };
 
 #endif

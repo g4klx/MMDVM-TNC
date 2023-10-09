@@ -89,7 +89,7 @@ void CMode3TX::process()
   if (m_playOut > 0U) {
     uint16_t space = io.getSpace();
     while ((m_playOut > 0U) && (space > (MODE3_SYMBOLS_PER_BYTE * MODE3_RADIO_SYMBOL_LENGTH))) {
-      writeByte(MODE3_PREAMBLE_BYTE);
+      writeSilence();
 
       space -= MODE3_SYMBOLS_PER_BYTE * MODE3_RADIO_SYMBOL_LENGTH;
       m_playOut--;
@@ -183,6 +183,16 @@ void CMode3TX::writeByte(uint8_t c)
   }
 
   q15_t outBuffer[MODE3_RADIO_SYMBOL_LENGTH * 4U];
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, MODE3_SYMBOLS_PER_BYTE);
+
+  io.write(outBuffer, MODE3_RADIO_SYMBOL_LENGTH * MODE3_SYMBOLS_PER_BYTE);
+}
+
+void CMode3TX::writeSilence()
+{
+  q15_t inBuffer[MODE3_SYMBOLS_PER_BYTE] = {0, 0, 0, 0};
+  q15_t outBuffer[MODE3_RADIO_SYMBOL_LENGTH * 4U];
+
   ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, MODE3_SYMBOLS_PER_BYTE);
 
   io.write(outBuffer, MODE3_RADIO_SYMBOL_LENGTH * MODE3_SYMBOLS_PER_BYTE);
