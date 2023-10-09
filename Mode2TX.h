@@ -50,6 +50,7 @@ private:
   CTokenStore                      m_tokens;
 
   void writeByte(uint8_t c);
+  void writeSilence();
 };
 
 #endif

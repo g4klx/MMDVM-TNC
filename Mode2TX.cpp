@@ -96,7 +96,7 @@ void CMode2TX::process()
   if (m_playOut > 0U) {
     uint16_t space = io.getSpace();
     while ((m_playOut > 0U) && (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH))) {
-      writeByte(MODE2_PREAMBLE_BYTE);
+      writeSilence();
 
       space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
       m_playOut--;
@@ -190,6 +190,16 @@ void CMode2TX::writeByte(uint8_t c)
   }
 
   q15_t outBuffer[MODE2_RADIO_SYMBOL_LENGTH * 4U];
+  ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, MODE2_SYMBOLS_PER_BYTE);
+
+  io.write(outBuffer, MODE2_RADIO_SYMBOL_LENGTH * MODE2_SYMBOLS_PER_BYTE);
+}
+
+void CMode2TX::writeSilence()
+{
+  q15_t inBuffer[MODE2_SYMBOLS_PER_BYTE] = {0, 0, 0, 0};
+  q15_t outBuffer[MODE2_RADIO_SYMBOL_LENGTH * 4U];
+
   ::arm_fir_interpolate_q15(&m_modFilter, inBuffer, outBuffer, MODE2_SYMBOLS_PER_BYTE);
 
   io.write(outBuffer, MODE2_RADIO_SYMBOL_LENGTH * MODE2_SYMBOLS_PER_BYTE);
