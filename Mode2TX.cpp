@@ -146,7 +146,11 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
   DEBUG2("Mode2TX: adding the IL2P data", len);
   for (uint16_t i = 0U; i < len; i++)
     m_fifo.put(buffer[i]);
-
+// XXX
+  DEBUG2("Mode2TX: adding the tx tail (temp)", m_txTail);
+  for (uint16_t i = 0U; i < m_txTail; i++)
+    m_fifo.put(MODE2_PREAMBLE_BYTE);
+// XXX
   return 0U;
 }
 
