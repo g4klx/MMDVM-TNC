@@ -129,7 +129,6 @@ void CMode2RX::processNone(q15_t sample)
   if (ret) {
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
-      io.setDecode(true);
       m_averagePtr = NOAVEPTR;
       m_countdown  = 5U;
     }
@@ -139,9 +138,16 @@ void CMode2RX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-    DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
-    m_state     = MODE2RXS_HEADER;
-    m_countdown = 0U;
+  if (m_thresholdVal >= 100) {
+      DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
+
+      io.setDecode(true);
+
+      m_state     = MODE2RXS_HEADER;
+      m_countdown = 0U;
+    } else {
+      reset();
+    }
   }
 }
 
