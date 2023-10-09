@@ -53,8 +53,11 @@ private:
 
   void processMessage();
 
-  void writeDebug(int16_t num);
+#if defined(SERIAL_DEBUGGING)
+  void writeDebugInt(const char* text);
+  void writeDebugInt(int16_t num);
   void reverse(char* buffer, uint8_t length) const;
+#endif
 
   // Hardware versions
   void    beginInt(uint8_t n, int speed);

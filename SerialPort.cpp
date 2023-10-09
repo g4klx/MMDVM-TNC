@@ -249,59 +249,70 @@ void CSerialPort::writeKISSAck(uint16_t token)
 void CSerialPort::writeDebug(const char* text)
 {
 #if defined(SERIAL_DEBUGGING)
-  writeInt(3U, (uint8_t*)text, ::strlen(text));
+  writeDebugInt(text);
+  writeDebugInt("\n");
 #endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1)
 {
 #if defined(SERIAL_DEBUGGING)
-  writeDebug(text);
-  writeDebug(" ");
-  writeDebug(n1);
+  writeDebugInt(text);
+  writeDebugInt(" ");
+  writeDebugInt(n1);
+  writeDebugInt("\n");
 #endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2)
 {
 #if defined(SERIAL_DEBUGGING)
-  writeDebug(text);
-  writeDebug(" ");
-  writeDebug(n1);
-  writeDebug(" ");
-  writeDebug(n2);
+  writeDebugInt(text);
+  writeDebugInt(" ");
+  writeDebugInt(n1);
+  writeDebugInt(" ");
+  writeDebugInt(n2);
+  writeDebugInt("\n");
 #endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3)
 {
 #if defined(SERIAL_DEBUGGING)
-  writeDebug(text);
-  writeDebug(" ");
-  writeDebug(n1);
-  writeDebug(" ");
-  writeDebug(n2);
-  writeDebug(" ");
-  writeDebug(n3);
+  writeDebugInt(text);
+  writeDebugInt(" ");
+  writeDebugInt(n1);
+  writeDebugInt(" ");
+  writeDebugInt(n2);
+  writeDebugInt(" ");
+  writeDebugInt(n3);
+  writeDebugInt("\n");
 #endif
 }
 
 void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4)
 {
 #if defined(SERIAL_DEBUGGING)
-  writeDebug(text);
-  writeDebug(" ");
-  writeDebug(n1);
-  writeDebug(" ");
-  writeDebug(n2);
-  writeDebug(" ");
-  writeDebug(n3);
-  writeDebug(" ");
-  writeDebug(n4);
+  writeDebugInt(text);
+  writeDebugInt(" ");
+  writeDebugInt(n1);
+  writeDebugInt(" ");
+  writeDebugInt(n2);
+  writeDebugInt(" ");
+  writeDebugInt(n3);
+  writeDebugInt(" ");
+  writeDebugInt(n4);
+  writeDebugInt("\n");
 #endif
 }
 
-void CSerialPort::writeDebug(int16_t num)
+#if defined(SERIAL_DEBUGGING)
+void CSerialPort::writeDebugInt(const char* text)
+{
+  writeInt(3U, (uint8_t*)text, ::strlen(text));
+}
+
+void CSerialPort::writeDebugInt(int16_t num)
 {
   if (num == 0) {
     writeDebug("0");
@@ -348,4 +359,5 @@ void CSerialPort::reverse(char* buffer, uint8_t length) const
     start++;
   }
 }
+#endif
 
