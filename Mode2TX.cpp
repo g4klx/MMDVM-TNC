@@ -105,17 +105,20 @@ void CMode2TX::process()
   if (m_fifo.getData() > 0U) {
     uint16_t space = io.getSpace();
     while (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH)) {
-      uint8_t c;
-      bool ok = m_fifo.get(c);
-      if (!ok) {
-        DEBUG2("Mode2TX: starting the play out data", m_txTail);
+      if (m_fifo.getData() == 0U) {
+        DEBUG2("Mode2TX: starting the transmit tail", m_txTail);
+
         m_playOut = m_txTail;
+
         return;
+      } else {
+        uint8_t c;
+        m_fifo.get(c);
+
+        writeByte(c);
+
+        space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
       }
-
-      writeByte(c);
-
-      space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
     }
   }
 }
