@@ -138,7 +138,7 @@ void CMode2RX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-  if (m_thresholdVal >= 100) {
+  if (m_thresholdVal >= 50) {
       DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
 
       io.setDecode(true);
