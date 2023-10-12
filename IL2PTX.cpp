@@ -146,6 +146,18 @@ bool CIL2PTX::isIL2PType1(const uint8_t* frame, uint16_t length) const
       return false;
   }
 
+  // Check the Command/Response bits
+  bool c1 = (frame[6U]  & 0x80U) == 0x80U;
+  bool c2 = (frame[13U] & 0x80U) == 0x80U;
+  if ((c1 && c2) || (!c1 && !c2))
+    return false;
+
+  // Check the reserved bits in the SSID
+  bool s1 = (frame[6U]  & 0x60U) == 0x60U;
+  bool s2 = (frame[13U] & 0x60U) == 0x60U;
+  if (!s1 || !s2)
+    return false;
+
   // How do we reject (or do we want to?) extended sequence number RRs, etc?
 
   return true;  
