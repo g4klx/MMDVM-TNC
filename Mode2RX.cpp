@@ -270,9 +270,9 @@ void CMode2RX::processCRC(q15_t sample)
 
 bool CMode2RX::correlateSync()
 {
-  if ((countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS) ||
-      (countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS)) {
-
+  uint8_t n1 = countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
+  uint8_t n2 = countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
+  if ((n1 <= MAX_SYNC_SYMBOLS_ERRS) || (n2 <= MAX_SYNC_SYMBOLS_ERRS)) {
     uint16_t ptr = m_dataPtr + MODE2_MAX_LENGTH_SAMPLES - MODE2_SYNC_LENGTH_SAMPLES;
     if (ptr >= MODE2_MAX_LENGTH_SAMPLES)
       ptr -= MODE2_MAX_LENGTH_SAMPLES;
@@ -333,6 +333,8 @@ bool CMode2RX::correlateSync()
         errs += countBits8(sync[i] ^ MODE2_SYNC_BYTES[i]);
 
       if (errs <= MAX_SYNC_BIT_ERRS) {
+        DEBUG4("Mode2RX: errors in a valid sync vector", n1, n2, errs);
+
         m_maxCorr = m_invert ? -corr : corr;
         m_syncPtr = m_dataPtr;
 
@@ -346,6 +348,8 @@ bool CMode2RX::correlateSync()
           m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
 
         return true;
+      } else {
+        DEBUG4("Mode2RX: errors in an invalid sync vector", n1, n2, errs);
       }
     }
   }
