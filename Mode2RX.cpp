@@ -176,28 +176,16 @@ void CMode2RX::processHeader(q15_t sample)
         if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
           m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
       } else {
-        bool hasCRC = m_frame.hasCRC();
-        if (hasCRC) {
-          DEBUG1("Mode2RX: header is valid but no payload and has a CRC");
+        DEBUG1("Mode2RX: header is valid but has no payload");
 
-          m_state = MODE2RXS_CRC;
+        m_state = MODE2RXS_CRC;
 
-          // The CRC starts right after the header
-          m_startPtr = m_endPtr;
+        // The CRC starts right after the header
+        m_startPtr = m_endPtr;
 
-          m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
-          if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
-            m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
-        } else {
-          DEBUG1("Mode2RX: header is valid but no payload and no CRC");
-
-          length = m_frame.getHeaderLength();
-          serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-          io.setDecode(false);
-
-          reset();
-        }
+        m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
+        if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
+          m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
       }
     } else {
       DEBUG1("Mode2RX: header is invalid");
@@ -217,28 +205,16 @@ void CMode2RX::processPayload(q15_t sample)
 
     bool ok = m_frame.processPayload(frame, m_packet);
     if (ok) {
-      bool hasCRC = m_frame.hasCRC();
-      if (hasCRC) {
-        DEBUG1("Mode2RX: payload is valid and has a CRC");
+      DEBUG1("Mode2RX: payload is valid");
 
-        m_state = MODE2RXS_CRC;
+      m_state = MODE2RXS_CRC;
 
-        // The CRC starts right after the payload
-        m_startPtr = m_endPtr;
+      // The CRC starts right after the payload
+      m_startPtr = m_endPtr;
 
-        m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
-        if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
-          m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
-      } else {
-        DEBUG1("Mode2RX: payload is valid but no CRC");
-
-        uint16_t length = m_frame.getHeaderLength() + m_frame.getPayloadLength();
-        serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-        io.setDecode(false);
-
-        reset();
-      }
+      m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
+      if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
+        m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
     } else {
       DEBUG1("Mode2RX: payload is invalid");
       io.setDecode(false);

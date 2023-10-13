@@ -169,6 +169,8 @@ void CIL2PTX::processType0Header(const uint8_t* in, uint16_t length, uint8_t* ou
 
   ::memset(out, 0x00U, IL2P_HDR_LENGTH);
 
+  out[0U] |= 0x80U;      // Using Max FEC
+
   out[2U]  = (length & 0x0200U) == 0x0200U ? 0x80U : 0x00U;
   out[3U]  = (length & 0x0100U) == 0x0100U ? 0x80U : 0x00U;
   out[4U]  = (length & 0x0080U) == 0x0080U ? 0x80U : 0x00U;
@@ -199,6 +201,7 @@ void CIL2PTX::processType1Header(const uint8_t* in, uint16_t length, uint8_t* ou
     out[i + 6U] = (in[i + 7U] >> 1) - 0x20U;  // Source callsign
   }
  
+  out[0U] |= 0x80U;      // Using Max FEC
   out[1U] |= 0x80U;      // It's a type 1 header
 
   out[12U]  = (in[13U] >> 1) & 0x0FU;  // The source SSID
