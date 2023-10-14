@@ -147,14 +147,20 @@ void CIO::process()
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
 
-    switch (m_mode) {
-      case 1U:
-        ax25RX.samples(samples, RX_BLOCK_SIZE);
-        break;
+    // Only pass the receive signal when the receiver is meant to be running
+    if (!m_tx || (m_tx && m_duplex)) {
+      switch (m_mode) {
+        case 1U:
+          ax25RX.samples(samples, RX_BLOCK_SIZE);
+          break;
 
-      case 2U:
-        mode2RX.samples(samples, RX_BLOCK_SIZE);
-        break;
+        case 2U:
+          mode2RX.samples(samples, RX_BLOCK_SIZE);
+          break;
+
+        default:
+          break;
+      }
     }
   }
 }
