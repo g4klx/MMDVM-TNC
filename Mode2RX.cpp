@@ -130,7 +130,7 @@ void CMode2RX::processNone(q15_t sample)
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
       m_averagePtr = NOAVEPTR;
-      m_countdown  = 5U;
+      m_countdown  = 3U;
     }
   }
 
@@ -138,7 +138,7 @@ void CMode2RX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-  if (m_thresholdVal >= 50) {
+    if (m_thresholdVal >= 50) {
       DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
 
       io.setDecode(true);
@@ -248,6 +248,7 @@ bool CMode2RX::correlateSync()
 {
   uint8_t n1 = countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
   uint8_t n2 = countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
+
   if ((n1 <= MAX_SYNC_SYMBOLS_ERRS) || (n2 <= MAX_SYNC_SYMBOLS_ERRS)) {
     uint16_t ptr = m_dataPtr + MODE2_MAX_LENGTH_SAMPLES - MODE2_SYNC_LENGTH_SAMPLES;
     if (ptr >= MODE2_MAX_LENGTH_SAMPLES)
@@ -287,7 +288,7 @@ bool CMode2RX::correlateSync()
 
     if ((corr > m_maxCorr) || (-corr > m_maxCorr)) {
       if (m_averagePtr == NOAVEPTR) {
-        m_centreVal = (max + min) >> 1;
+        m_centreVal = (max + min) / 2;
 
         q31_t v1 = (max - m_centreVal) * SCALING_FACTOR;
         m_thresholdVal = q15_t(v1 >> 15);
@@ -360,10 +361,10 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
       startPtr -= MODE2_MAX_LENGTH_SAMPLES;
   }
 
-  q15_t posThresh = (maxPos + minPos) >> 1;
-  q15_t negThresh = (maxNeg + minNeg) >> 1;
+  q15_t posThresh = (maxPos + minPos) / 2;
+  q15_t negThresh = (maxNeg + minNeg) / 2;
 
-  q15_t centre = (posThresh + negThresh) >> 1;
+  q15_t centre = (posThresh + negThresh) / 2;
 
   q15_t threshold = posThresh - centre;
 
@@ -371,13 +372,13 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
 
   if (m_averagePtr == NOAVEPTR) {
     for (uint8_t i = 0U; i < 16U; i++) {
-      m_centre[i] = centre;
+      m_centre[i]    = centre;
       m_threshold[i] = threshold;
     }
 
     m_averagePtr = 0U;
   } else {
-    m_centre[m_averagePtr] = centre;
+    m_centre[m_averagePtr]    = centre;
     m_threshold[m_averagePtr] = threshold;
 
     m_averagePtr++;
@@ -389,12 +390,12 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
   m_thresholdVal = 0;
 
   for (uint8_t i = 0U; i < 16U; i++) {
-    m_centreVal += m_centre[i];
+    m_centreVal    += m_centre[i];
     m_thresholdVal += m_threshold[i];
   }
 
-  m_centreVal >>= 4;
-  m_thresholdVal >>= 4;
+  m_centreVal    /= 16;
+  m_thresholdVal /= 16;
 }
 
 void CMode2RX::samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer)
