@@ -23,19 +23,13 @@
 #include "stm32f4xx.h"
 #elif defined(STM32F7XX)
 #include "stm32f7xx.h"
-#elif defined(STM32F105xC)
-#include "stm32f1xx.h"
-#include "STM32Utils.h"
 #else
-#include <Arduino.h>
-#undef PI //Undefine PI to get rid of annoying warning as it is also defined in arm_math.h.
+#error "Unknown processor type"
 #endif
 
-#if defined(__SAM3X8E__) || defined(STM32F105xC)
-#define  ARM_MATH_CM3
-#elif defined(STM32F7XX)
+#if defined(STM32F7XX)
 #define  ARM_MATH_CM7
-#elif defined(STM32F4XX) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
+#elif defined(STM32F4XX)
 #define  ARM_MATH_CM4
 #else
 #error "Unknown processor type"
@@ -56,11 +50,7 @@ const uint16_t RX_BLOCK_SIZE = 2U;
 const uint16_t TX_RINGBUFFER_SIZE = 1000U;
 const uint16_t RX_RINGBUFFER_SIZE = 2432U;
 
-#if defined(STM32F105xC) || defined(__MK20DX256__)
-const uint16_t TX_BUFFER_LEN = 2000U;
-#else
 const uint16_t TX_BUFFER_LEN = 4000U;
-#endif
 
 extern uint8_t m_mode;
 
