@@ -230,12 +230,12 @@ void CIO::interrupt()
   DAC_SetChannel1Data(DAC_Align_12b_R, sample);
 #endif
 
-  // Read value from ADC1 and ADC2
+  // Read value from ADC1
   if ((ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)) {
     // shouldn't be still in reset at this point so null the sample value?
-    sample  = 0U;
+    sample = 0U;
   } else {
-    sample  = ADC_GetConversionValue(ADC1);
+    sample = ADC_GetConversionValue(ADC1);
   }
 
   // trigger next ADC1
@@ -245,6 +245,10 @@ void CIO::interrupt()
   m_rxBuffer.put(sample);
 
   m_ledCount++;
+  if (m_txCount > 0U)
+    m_txCount--;
+  if (m_rxCount > 0U)
+    m_rxCount--;
 }
 
 void CIO::setLEDInt(bool on)
