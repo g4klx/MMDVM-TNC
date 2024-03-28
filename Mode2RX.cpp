@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ const uint16_t RRC_0_2_FILTER_LEN = 42U;
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_ERRS     = 3U;
+const uint8_t MAX_SYNC_BIT_ERRS     = 5U;
 const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
@@ -310,7 +310,7 @@ bool CMode2RX::correlateSync()
         errs += countBits8(sync[i] ^ MODE2_SYNC_BYTES[i]);
 
       if (errs <= MAX_SYNC_BIT_ERRS) {
-        DEBUG4("Mode2RX: errors in a valid sync vector", n1, n2, errs);
+        DEBUG6("Mode2RX: valid sync vector", corr, m_dataPtr, n1, n2, errs);
 
         m_maxCorr = m_invert ? -corr : corr;
         m_syncPtr = m_dataPtr;
@@ -325,8 +325,6 @@ bool CMode2RX::correlateSync()
           m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
 
         return true;
-      } else {
-        DEBUG4("Mode2RX: errors in an invalid sync vector", n1, n2, errs);
       }
     }
   }
@@ -436,4 +434,3 @@ void CMode2RX::samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer
       startPtr -= MODE2_MAX_LENGTH_SAMPLES;
   }
 }
-

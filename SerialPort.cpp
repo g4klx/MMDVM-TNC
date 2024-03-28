@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2013,2015-2021,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2013,2015-2021,2023,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -292,6 +292,24 @@ void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n
   writeDebugInt(n3);
   writeDebugInt(" ");
   writeDebugInt(n4);
+  writeDebugInt("\n");
+#endif
+}
+
+void CSerialPort::writeDebug(const char* text, int16_t n1, int16_t n2, int16_t n3, int16_t n4, int16_t n5)
+{
+#if defined(SERIAL_DEBUGGING)
+  writeDebugInt(text);
+  writeDebugInt(" ");
+  writeDebugInt(n1);
+  writeDebugInt(" ");
+  writeDebugInt(n2);
+  writeDebugInt(" ");
+  writeDebugInt(n3);
+  writeDebugInt(" ");
+  writeDebugInt(n4);
+  writeDebugInt(" ");
+  writeDebugInt(n5);
   writeDebugInt("\n");
 #endif
 }
