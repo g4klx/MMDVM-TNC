@@ -245,10 +245,6 @@ void CIO::interrupt()
   m_rxBuffer.put(sample);
 
   m_ledCount++;
-  if (m_txCount > 0U)
-    m_txCount--;
-  if (m_rxCount > 0U)
-    m_rxCount--;
 }
 
 void CIO::setLEDInt(bool on)

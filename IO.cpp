@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023,2024 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
  *   Copyright (C) 2015 by Jim Mclaughlin KI6ZUM
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -24,8 +24,6 @@
 
 const q15_t DC_OFFSET = 2048;
 
-const uint32_t OVERFLOW_COUNT = 12000U;
-
 CIO::CIO() :
 m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
@@ -35,10 +33,6 @@ m_slotTime((SLOT_TIME / 10U) * 240U),
 m_dcd(false),
 m_ledCount(0U),
 m_ledValue(true),
-m_rxCount(0U),
-m_rxValue(false),
-m_txCount(0U),
-m_txValue(false),
 m_slotCount(0U),
 m_canTX(false),
 m_x(1U),
@@ -128,32 +122,6 @@ void CIO::process()
     DEBUG1("TX OFF");
   }
 
-  if (m_rxCount == 0U) {
-    bool value = m_rxBuffer.hasOverflowed();
-    if (value)
-      m_rxCount = OVERFLOW_COUNT;
-
-    if (value != m_rxValue) {
-      showRXOverflow(value);
-      m_rxValue = value;
-    }
-  } else {
-    m_rxBuffer.hasOverflowed();
-  }
-
-  if (m_txCount == 0U) {
-    bool value = m_txBuffer.hasOverflowed();
-    if (value)
-      m_txCount = OVERFLOW_COUNT;
-
-    if (value != m_txValue) {
-      showTXOverflow(value);
-      m_txValue = value;
-    }
-  } else {
-    m_txBuffer.hasOverflowed();
-  }
-
   if (m_rxBuffer.getData() >= RX_BLOCK_SIZE) {
     // Only do the CSMA calculations when in simplex mode
     if (!m_duplex) {
@@ -219,36 +187,22 @@ void CIO::showMode()
     case 1U:
       setMode1Int(true);
       setMode2Int(false);
-      // setMode3Int(false);
-      // setMode4Int(false);
+      setMode3Int(false);
+      setMode4Int(false);
       break;
     case 2U:
       setMode1Int(false);
       setMode2Int(true);
-      // setMode3Int(false);
-      // setMode4Int(false);
+      setMode3Int(false);
+      setMode4Int(false);
       break;
     default:
       setMode1Int(false);
       setMode2Int(false);
-      // setMode3Int(false);
-      // setMode4Int(false);
+      setMode3Int(false);
+      setMode4Int(false);
       break;
   }
-#endif
-}
-
-void CIO::showRXOverflow(bool on)
-{
-#if defined(MODE_LEDS)
-  setMode3Int(on);
-#endif
-}
-
-void CIO::showTXOverflow(bool on)
-{
-#if defined(MODE_LEDS)
-  setMode4Int(on);
 #endif
 }
 
@@ -316,7 +270,7 @@ void CIO::initRand() //Can also be used to seed the rng with more entropy during
 {
   m_a = (m_a ^ m_c ^ m_x);
   m_b = (m_b + m_a);
-  m_c = (m_c + (m_b >> 1) ^ m_a);
+  m_c = (m_c + ((m_b >> 1) ^ m_a));
 }
 
 uint8_t CIO::rand()
@@ -325,7 +279,7 @@ uint8_t CIO::rand()
 
   m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
   m_b = (m_b + m_a);               //And the use of very few instructions
-  m_c = (m_c + (m_b >> 1) ^ m_a);  //the right shift is to ensure that high-order bits from b can affect  
+  m_c = (m_c + ((m_b >> 1) ^ m_a));  //the right shift is to ensure that high-order bits from b can affect  
 
   return uint8_t(m_c);             //low order bits of other variables
 }
