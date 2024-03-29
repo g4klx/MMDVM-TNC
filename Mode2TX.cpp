@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -95,11 +95,14 @@ void CMode2TX::process()
   // Are we sending the trailer?
   if (m_playOut > 0U) {
     uint16_t space = io.getSpace();
-    while ((m_playOut > 0U) && (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH))) {
+    while (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH)) {
       writeSilence();
 
       space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
       m_playOut--;
+
+      if (m_playOut == 0U)
+        break;
     }
 
     return;
@@ -108,17 +111,17 @@ void CMode2TX::process()
   if (m_fifo.getData() > 0U) {
     uint16_t space = io.getSpace();
     while (space > (MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH)) {
-      uint8_t c;
-      bool ok = m_fifo.get(c);
-      if (!ok) {
-        DEBUG2("Mode2TX: starting the play out data", m_txTail);
-        m_playOut = m_txTail;
-        return;
-      }
+      uint8_t c = 0U;
+      m_fifo.get(c);
 
       writeByte(c);
 
       space -= MODE2_SYMBOLS_PER_BYTE * MODE2_RADIO_SYMBOL_LENGTH;
+
+      if (m_fifo.getData() == 0U) {
+        m_playOut = m_txTail;
+        return;
+      }
     }
   }
 }
@@ -133,22 +136,23 @@ uint8_t CMode2TX::writeData(const uint8_t* data, uint16_t length)
 
   // Add the preamble symbols
   if (!m_tx && (m_fifo.getData() == 0U)) {
-    DEBUG2("Mode2TX: adding the preamble", m_txDelay);
     for (uint16_t i = 0U; i < m_txDelay; i++)
       m_fifo.put(MODE2_PREAMBLE_BYTE);
   }
 
   // Add the IL2P sync vector
-  DEBUG1("Mode2TX: adding the IL2P sync vector");
   for (uint8_t i = 0U; i < MODE2_SYNC_LENGTH_BYTES; i++)
     m_fifo.put(MODE2_SYNC_BYTES[i]);
 
   uint8_t buffer[2000U];
   uint16_t len = m_frame.process(data, length, buffer);
 
-  DEBUG2("Mode2TX: adding the IL2P data", len);
   for (uint16_t i = 0U; i < len; i++)
     m_fifo.put(buffer[i]);
+
+  // Insert some spacer
+  for (uint8_t i = 0U; i < 10U; i++)
+    m_fifo.put(MODE2_PREAMBLE_BYTE);
 
   return 0U;
 }
@@ -219,4 +223,3 @@ void CMode2TX::setLevel(uint8_t value)
 {
   m_level = q15_t(value * 128);
 }
-

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ const uint16_t RRC_0_2_FILTER_LEN = 82U;
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_ERRS     = 2U;
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 3U;
+const uint8_t MAX_SYNC_BIT_ERRS     = 5U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -132,7 +132,7 @@ void CMode2RX::processNone(q15_t sample)
     // On the first sync, start the countdown to the state change
     if (m_countdown == 0U) {
       m_averagePtr = NOAVEPTR;
-      m_countdown  = 5U;
+      m_countdown  = 3U;
     }
   }
 
@@ -140,7 +140,7 @@ void CMode2RX::processNone(q15_t sample)
     m_countdown--;
 
   if (m_countdown == 1U) {
-  if (m_thresholdVal >= 100) {
+    if (m_thresholdVal >= 50) {
       DEBUG5("Mode2RX: sync found pos/centre/threshold/invert", m_syncPtr, m_centreVal, m_thresholdVal, m_invert ? 1 : 0);
 
       io.setDecode(true);
@@ -178,28 +178,16 @@ void CMode2RX::processHeader(q15_t sample)
         if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
           m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
       } else {
-        bool hasCRC = m_frame.hasCRC();
-        if (hasCRC) {
-          DEBUG1("Mode2RX: header is valid but no payload and has a CRC");
+        DEBUG1("Mode2RX: header is valid but has no payload");
 
-          m_state = MODE2RXS_CRC;
+        m_state = MODE2RXS_CRC;
 
-          // The CRC starts right after the header
-          m_startPtr = m_endPtr;
+        // The CRC starts right after the header
+        m_startPtr = m_endPtr;
 
-          m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
-          if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
-            m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
-        } else {
-          DEBUG1("Mode2RX: header is valid but no payload and no CRC");
-
-          length = m_frame.getHeaderLength();
-          serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-          io.setDecode(false);
-
-          reset();
-        }
+        m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
+        if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
+          m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
       }
     } else {
       DEBUG1("Mode2RX: header is invalid");
@@ -219,28 +207,16 @@ void CMode2RX::processPayload(q15_t sample)
 
     bool ok = m_frame.processPayload(frame, m_packet);
     if (ok) {
-      bool hasCRC = m_frame.hasCRC();
-      if (hasCRC) {
-        DEBUG1("Mode2RX: payload is valid and has a CRC");
+      DEBUG1("Mode2RX: payload is valid");
 
-        m_state = MODE2RXS_CRC;
+      m_state = MODE2RXS_CRC;
 
-        // The CRC starts right after the payload
-        m_startPtr = m_endPtr;
+      // The CRC starts right after the payload
+      m_startPtr = m_endPtr;
 
-        m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
-        if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
-          m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
-      } else {
-        DEBUG1("Mode2RX: payload is valid but no CRC");
-
-        uint16_t length = m_frame.getHeaderLength() + m_frame.getPayloadLength();
-        serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-        io.setDecode(false);
-
-        reset();
-      }
+      m_endPtr = m_startPtr + MODE2_CRC_LENGTH_SAMPLES;
+      if (m_endPtr >= MODE2_MAX_LENGTH_SAMPLES)
+        m_endPtr -= MODE2_MAX_LENGTH_SAMPLES;
     } else {
       DEBUG1("Mode2RX: payload is invalid");
       io.setDecode(false);
@@ -256,16 +232,6 @@ void CMode2RX::processCRC(q15_t sample)
     samplesToBits(m_startPtr, m_endPtr, crc);
 
     bool ok = m_frame.checkCRC(m_packet, crc);
-    if (ok)
-      DEBUG1("Mode2RX: frame CRC is valid");
-    else
-      DEBUG1("Mode2RX: frame CRC is invalid");
-
-    uint16_t length = m_frame.getHeaderLength() + m_frame.getPayloadLength();
-    serial.writeKISSData(KISS_TYPE_DATA, m_packet, length);
-
-/*
-    bool ok = m_frame.checkCRC(m_packet, crc);
     if (ok) {
       DEBUG1("Mode2RX: frame CRC is valid");
 
@@ -274,7 +240,7 @@ void CMode2RX::processCRC(q15_t sample)
     } else {
       DEBUG1("Mode2RX: frame CRC is invalid");
     }
-*/
+
     io.setDecode(false);
     reset();
   }
@@ -282,9 +248,10 @@ void CMode2RX::processCRC(q15_t sample)
 
 bool CMode2RX::correlateSync()
 {
-  if ((countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS) ||
-      (countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK) <= MAX_SYNC_SYMBOLS_ERRS)) {
+  uint8_t n1 = countBits32((m_bitBuffer[m_bitPtr] ^  MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
+  uint8_t n2 = countBits32((m_bitBuffer[m_bitPtr] ^ ~MODE2_SYNC_SYMBOLS) & MODE2_SYNC_SYMBOLS_MASK);
 
+  if ((n1 <= MAX_SYNC_SYMBOLS_ERRS) || (n2 <= MAX_SYNC_SYMBOLS_ERRS)) {
     uint16_t ptr = m_dataPtr + MODE2_MAX_LENGTH_SAMPLES - MODE2_SYNC_LENGTH_SAMPLES;
     if (ptr >= MODE2_MAX_LENGTH_SAMPLES)
       ptr -= MODE2_MAX_LENGTH_SAMPLES;
@@ -323,7 +290,7 @@ bool CMode2RX::correlateSync()
 
     if ((corr > m_maxCorr) || (-corr > m_maxCorr)) {
       if (m_averagePtr == NOAVEPTR) {
-        m_centreVal = (max + min) >> 1;
+        m_centreVal = (max + min) / 2;
 
         q31_t v1 = (max - m_centreVal) * SCALING_FACTOR;
         m_thresholdVal = q15_t(v1 >> 15);
@@ -345,6 +312,8 @@ bool CMode2RX::correlateSync()
         errs += countBits8(sync[i] ^ MODE2_SYNC_BYTES[i]);
 
       if (errs <= MAX_SYNC_BIT_ERRS) {
+        DEBUG6("Mode2RX: valid sync vector", corr, m_dataPtr, n1, n2, errs);
+
         m_maxCorr = m_invert ? -corr : corr;
         m_syncPtr = m_dataPtr;
 
@@ -392,10 +361,10 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
       startPtr -= MODE2_MAX_LENGTH_SAMPLES;
   }
 
-  q15_t posThresh = (maxPos + minPos) >> 1;
-  q15_t negThresh = (maxNeg + minNeg) >> 1;
+  q15_t posThresh = (maxPos + minPos) / 2;
+  q15_t negThresh = (maxNeg + minNeg) / 2;
 
-  q15_t centre = (posThresh + negThresh) >> 1;
+  q15_t centre = (posThresh + negThresh) / 2;
 
   q15_t threshold = posThresh - centre;
 
@@ -403,13 +372,13 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
 
   if (m_averagePtr == NOAVEPTR) {
     for (uint8_t i = 0U; i < 16U; i++) {
-      m_centre[i] = centre;
+      m_centre[i]    = centre;
       m_threshold[i] = threshold;
     }
 
     m_averagePtr = 0U;
   } else {
-    m_centre[m_averagePtr] = centre;
+    m_centre[m_averagePtr]    = centre;
     m_threshold[m_averagePtr] = threshold;
 
     m_averagePtr++;
@@ -421,12 +390,12 @@ void CMode2RX::calculateLevels(uint16_t startPtr, uint16_t endPtr)
   m_thresholdVal = 0;
 
   for (uint8_t i = 0U; i < 16U; i++) {
-    m_centreVal += m_centre[i];
+    m_centreVal    += m_centre[i];
     m_thresholdVal += m_threshold[i];
   }
 
-  m_centreVal >>= 4;
-  m_thresholdVal >>= 4;
+  m_centreVal    /= 16;
+  m_thresholdVal /= 16;
 }
 
 void CMode2RX::samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer)
@@ -467,4 +436,3 @@ void CMode2RX::samplesToBits(uint16_t startPtr, uint16_t endPtr, uint8_t* buffer
       startPtr -= MODE2_MAX_LENGTH_SAMPLES;
   }
 }
-

@@ -37,7 +37,6 @@ public:
 
   uint16_t getPayloadParityLength() const;
 
-  bool hasCRC() const;
   bool checkCRC(const uint8_t* frame, const uint8_t* crc) const;
 
 private:
@@ -57,7 +56,6 @@ private:
   uint8_t  m_smallBlockCount;
   uint8_t  m_paritySymbolsPerBlock;
   uint16_t m_outOffset;
-  bool     m_hasCRC;
 
   void calculatePayloadBlockSize();
 

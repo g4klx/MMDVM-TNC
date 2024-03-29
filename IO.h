@@ -89,7 +89,7 @@ private:
   void setMode2Int(bool on);
   void setMode3Int(bool on);
   void setMode4Int(bool on);
-  
+
   void delayInt(unsigned int dly);
 };
 

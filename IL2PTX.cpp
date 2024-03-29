@@ -146,6 +146,18 @@ bool CIL2PTX::isIL2PType1(const uint8_t* frame, uint16_t length) const
       return false;
   }
 
+  // Check the Command/Response bits
+  bool c1 = (frame[6U]  & 0x80U) == 0x80U;
+  bool c2 = (frame[13U] & 0x80U) == 0x80U;
+  if ((c1 && c2) || (!c1 && !c2))
+    return false;
+
+  // Check the reserved bits in the SSID
+  bool s1 = (frame[6U]  & 0x60U) == 0x60U;
+  bool s2 = (frame[13U] & 0x60U) == 0x60U;
+  if (!s1 || !s2)
+    return false;
+
   // How do we reject (or do we want to?) extended sequence number RRs, etc?
 
   return true;  
@@ -156,6 +168,8 @@ void CIL2PTX::processType0Header(const uint8_t* in, uint16_t length, uint8_t* ou
   DEBUG1("IL2PTX: type 0 header");
 
   ::memset(out, 0x00U, IL2P_HDR_LENGTH);
+
+  out[0U] |= 0x80U;      // Using Max FEC
 
   out[2U]  = (length & 0x0200U) == 0x0200U ? 0x80U : 0x00U;
   out[3U]  = (length & 0x0100U) == 0x0100U ? 0x80U : 0x00U;
@@ -187,6 +201,7 @@ void CIL2PTX::processType1Header(const uint8_t* in, uint16_t length, uint8_t* ou
     out[i + 6U] = (in[i + 7U] >> 1) - 0x20U;  // Source callsign
   }
  
+  out[0U] |= 0x80U;      // Using Max FEC
   out[1U] |= 0x80U;      // It's a type 1 header
 
   out[12U]  = (in[13U] >> 1) & 0x0FU;  // The source SSID

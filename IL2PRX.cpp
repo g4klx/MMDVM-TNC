@@ -65,8 +65,7 @@ m_largeBlockSize(0U),
 m_largeBlockCount(0U),
 m_smallBlockCount(0U),
 m_paritySymbolsPerBlock(0U),
-m_outOffset(0U),
-m_hasCRC(false)
+m_outOffset(0U)
 {
 }
 
@@ -85,9 +84,6 @@ bool CIL2PRX::processHeader(const uint8_t* in, uint8_t* out)
     processType1Header(buffer, out);
   else
     processType0Header(buffer, out);
-
-  // A zero indicates that a CRC is appended
-  m_hasCRC = (buffer[0U] & 0x80U) == 0x00U;
 
   m_outOffset = m_headerByteCount;
 
@@ -328,11 +324,6 @@ void CIL2PRX::processType1Header(const uint8_t* in, uint8_t* out)
   m_headerByteCount = hasPID ? 16U : 15U;
 }
 
-bool CIL2PRX::hasCRC() const
-{
-  return m_hasCRC;
-}
-
 bool CIL2PRX::checkCRC(const uint8_t* frame, const uint8_t* crc) const
 {
   // Fix the CRC Hamming code
@@ -344,9 +335,6 @@ bool CIL2PRX::checkCRC(const uint8_t* frame, const uint8_t* crc) const
 
   // Calculate the checksum of the frame
   uint16_t crc2 = m_crc.calculate(frame, m_headerByteCount + m_payloadByteCount);
-
-  if (crc1 != crc2)
-    DEBUG3("IL2PRX: bad checksum", crc1, crc2);
 
   return crc1 == crc2;
 }

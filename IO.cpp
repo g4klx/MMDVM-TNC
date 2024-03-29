@@ -147,18 +147,24 @@ void CIO::process()
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
 
-    switch (m_mode) {
-      case 1U:
-        ax25RX.samples(samples, RX_BLOCK_SIZE);
-        break;
+    // Only pass the receive signal when the receiver is meant to be running
+    if (!m_tx || (m_tx && m_duplex)) {
+      switch (m_mode) {
+        case 1U:
+          ax25RX.samples(samples, RX_BLOCK_SIZE);
+          break;
 
-      case 2U:
-        mode2RX.samples(samples, RX_BLOCK_SIZE);
-        break;
+        case 2U:
+          mode2RX.samples(samples, RX_BLOCK_SIZE);
+          break;
 
-      case 3U:
-        mode3RX.samples(samples, RX_BLOCK_SIZE);
-        break;
+        case 3U:
+          mode3RX.samples(samples, RX_BLOCK_SIZE);
+          break;
+
+        default:
+          break;
+      }
     }
   }
 }
@@ -274,7 +280,7 @@ void CIO::initRand() //Can also be used to seed the rng with more entropy during
 {
   m_a = (m_a ^ m_c ^ m_x);
   m_b = (m_b + m_a);
-  m_c = (m_c + (m_b >> 1) ^ m_a);
+  m_c = (m_c + ((m_b >> 1) ^ m_a));
 }
 
 uint8_t CIO::rand()
@@ -283,7 +289,7 @@ uint8_t CIO::rand()
 
   m_a = (m_a ^ m_c ^ m_x);         //note the mix of addition and XOR
   m_b = (m_b + m_a);               //And the use of very few instructions
-  m_c = (m_c + (m_b >> 1) ^ m_a);  //the right shift is to ensure that high-order bits from b can affect  
+  m_c = (m_c + ((m_b >> 1) ^ m_a));  //the right shift is to ensure that high-order bits from b can affect  
 
   return uint8_t(m_c);             //low order bits of other variables
 }
