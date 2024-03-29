@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,10 +21,9 @@
 #if !defined(MODE3TX_H)
 #define  MODE3TX_H
 
-#include <vector>
-
 #include "IL2PTX.h"
 #include "RingBuffer.h"
+#include "TokenStore.h"
 
 class CMode3TX {
 public:
@@ -48,7 +47,7 @@ private:
   q15_t                            m_level;
   uint16_t                         m_txDelay;
   uint16_t                         m_txTail;
-  std::vector<uint16_t>            m_tokens;
+  CTokenStore                      m_tokens;
 
   void writeByte(uint8_t c);
   void writeSilence();
