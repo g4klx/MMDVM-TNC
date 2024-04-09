@@ -65,8 +65,7 @@ CSerialPort::CSerialPort() :
 m_buffer(),
 m_ptr(0U),
 m_inFrame(false),
-m_isEscaped(false),
-m_debug(false)
+m_isEscaped(false)
 {
 }
 
@@ -125,7 +124,11 @@ void CSerialPort::process()
 
 void CSerialPort::processMessage()
 {
-  switch (m_buffer[0U]) {
+  // Check the KISS address
+  if ((m_buffer[0U] & 0xF0U) != (KISS_ADDRESS << 4))
+    return;
+
+  switch (m_buffer[0U] & 0x0FU) {
     case KISS_TYPE_DATA:
       switch (m_mode) {
         case 1U:
@@ -204,7 +207,7 @@ void CSerialPort::writeKISSData(uint8_t type, const uint8_t* data, uint16_t leng
   uint8_t buffer[2U];
 
   buffer[0U] = KISS_FEND;
-  buffer[1U] = type;
+  buffer[1U] = type | (KISS_ADDRESS << 4);
   writeInt(1U, buffer, 2U);
 
   for (uint16_t i = 0U; i < length; i++) {

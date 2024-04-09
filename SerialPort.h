@@ -50,7 +50,6 @@ private:
   uint16_t m_ptr;
   bool     m_inFrame;
   bool     m_isEscaped;
-  bool     m_debug;
 
   void processMessage();
 
