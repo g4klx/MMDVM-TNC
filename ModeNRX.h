@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,35 +18,35 @@
 
 #include "Config.h"
 
-#if !defined(MODE2RX_H)
-#define  MODE2RX_H
+#if !defined(MODENRX_H)
+#define  MODENRX_H
 
-#include "Mode2Defines.h"
+#include "ModeNDefines.h"
 #include "IL2PRX.h"
 
-enum MODE2RX_STATE {
-  MODE2RXS_NONE,
-  MODE2RXS_HEADER,
-  MODE2RXS_PAYLOAD,
-  MODE2RXS_CRC
+enum MODENRX_STATE {
+  MODENRXS_NONE,
+  MODENRXS_HEADER,
+  MODENRXS_PAYLOAD,
+  MODENRXS_CRC
 };
 
-const uint16_t MODE2_MAX_LENGTH_SAMPLES = (1023U + MODE2_HEADER_LENGTH_BYTES + MODE2_HEADER_PARITY_BYTES + 5U * MODE2_PAYLOAD_PARITY_BYTES + MODE2_CRC_LENGTH_BYTES) * MODE2_SYMBOLS_PER_BYTE;
+const uint16_t MODEN_MAX_LENGTH_SAMPLES = (1023U + MODEN_HEADER_LENGTH_BYTES + MODEN_HEADER_PARITY_BYTES + 5U * MODEN_PAYLOAD_PARITY_BYTES + MODEN_CRC_LENGTH_BYTES) * MODEN_SYMBOLS_PER_BYTE;
 
-class CMode2RX {
+class CModeNRX {
 public:
-  CMode2RX();
+  CModeNRX();
 
   void reset();
 
   void samples(q15_t* samples, uint8_t length);
 
 private:
-  MODE2RX_STATE        m_state;
+  MODENRX_STATE        m_state;
   arm_fir_instance_q15 m_rrc02Filter;
   q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  uint32_t             m_bitBuffer[MODE2_RADIO_SYMBOL_LENGTH];
-  q15_t                m_buffer[MODE2_MAX_LENGTH_SAMPLES];
+  uint32_t             m_bitBuffer[MODEN_RADIO_SYMBOL_LENGTH];
+  q15_t                m_buffer[MODEN_MAX_LENGTH_SAMPLES];
   uint16_t             m_bitPtr;
   uint16_t             m_dataPtr;
   uint16_t             m_startPtr;

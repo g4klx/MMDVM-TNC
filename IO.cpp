@@ -153,7 +153,7 @@ void CIO::process()
         break;
 
       case 2U:
-        mode2RX.samples(samples, RX_BLOCK_SIZE);
+        modeNRX.samples(samples, RX_BLOCK_SIZE);
         break;
 
       default:

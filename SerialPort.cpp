@@ -135,14 +135,14 @@ void CSerialPort::processMessage()
           ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
         case 2U:
-          mode2TX.writeData(m_buffer + 1U, m_ptr - 1U);
+          modeNTX.writeData(m_buffer + 1U, m_ptr - 1U);
           break;
       }
       break;
     case KISS_TYPE_TX_DELAY:
       if (m_ptr == 2U) {
         ax25TX.setTXDelay(m_buffer[1U]);
-        mode2TX.setTXDelay(m_buffer[1U]);
+        modeNTX.setTXDelay(m_buffer[1U]);
         DEBUG2("Setting TX Delay to", m_buffer[1U]);
       }
       break;
@@ -160,7 +160,7 @@ void CSerialPort::processMessage()
       break;
     case KISS_TYPE_TX_TAIL:
       if (m_ptr == 2U) {
-        mode2TX.setTXTail(m_buffer[1U]);
+        modeNTX.setTXTail(m_buffer[1U]);
         DEBUG2("Setting TX Tail to", m_buffer[1U]);
       }
       break;
@@ -178,7 +178,7 @@ void CSerialPort::processMessage()
       } else if (m_ptr == 4U) {
         io.setRXLevel(m_buffer[1U]);
         ax25TX.setLevel(m_buffer[2]);
-        mode2TX.setLevel(m_buffer[3]);
+        modeNTX.setLevel(m_buffer[3]);
         DEBUG2("Setting RX Level to", m_buffer[1U]);
         DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
         DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);
@@ -191,7 +191,7 @@ void CSerialPort::processMessage()
             ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
           case 2U:
-            mode2TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+            modeNTX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
             break;
         }
       }

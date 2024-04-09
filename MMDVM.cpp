@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2016 by Mathis Schmieder DB9MAT
  *   Copyright (C) 2016 by Colin Durbridge G4EML
  *
@@ -29,8 +29,8 @@ bool m_tx = false;
 CAX25RX ax25RX;
 CAX25TX ax25TX;
 
-CMode2TX mode2TX;
-CMode2RX mode2RX;
+CModeNTX modeNTX;
+CModeNRX modeNRX;
 
 CSerialPort serial;
 CIO io;
@@ -54,7 +54,7 @@ void loop()
       ax25TX.process();
       break;
     case 2U:
-      mode2TX.process();
+      modeNTX.process();
       break;
   }
 }

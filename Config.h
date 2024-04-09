@@ -67,11 +67,8 @@
 // Set the receive level (out of 255)
 #define	RX_LEVEL	128
 
-// Set the mode 1 transmit level (out of 255)
-#define	MODE1_TX_LEVEL	128
-
-// Set the mode 2 transmit level (out of 255)
-#define	MODE2_TX_LEVEL	128
+// Set the transmit level (out of 255)
+#define	TX_LEVEL	128
 
 // Set the KISS TNC address, default is 0
 #define	KISS_ADDRESS	0

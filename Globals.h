@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -40,8 +40,8 @@
 #include "SerialPort.h"
 #include "AX25RX.h"
 #include "AX25TX.h"
-#include "Mode2RX.h"
-#include "Mode2TX.h"
+#include "ModeNRX.h"
+#include "ModeNTX.h"
 #include "Debug.h"
 #include "IO.h"
 
@@ -63,8 +63,8 @@ extern CIO io;
 extern CAX25RX ax25RX;
 extern CAX25TX ax25TX;
 
-extern CMode2TX mode2TX;
-extern CMode2RX mode2RX;
+extern CModeNTX modeNTX;
+extern CModeNRX modeNRX;
 
 #endif
 

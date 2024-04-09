@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2020,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2020,2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ m_poLen(0U),
 m_poPtr(0U),
 m_tablePtr(0U),
 m_nrzi(false),
-m_level(MODE1_TX_LEVEL * 128),
+m_level(TX_LEVEL * 128),
 m_txDelay((TX_DELAY / 10U) * 12U),
 m_tokens()
 {

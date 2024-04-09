@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
 
 #include "Config.h"
 
-#if !defined(MODE2TX_H)
-#define  MODE2TX_H
+#if !defined(MODENTX_H)
+#define  MODENTX_H
 
 #include "IL2PTX.h"
 #include "RingBuffer.h"
 #include "TokenStore.h"
 
-class CMode2TX {
+class CModeNTX {
 public:
-  CMode2TX();
+  CModeNTX();
 
   uint8_t writeData(const uint8_t* data, uint16_t length);
   uint8_t writeDataAck(uint16_t token, const uint8_t* data, uint16_t length);
