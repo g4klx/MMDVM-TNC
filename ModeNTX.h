@@ -34,6 +34,8 @@ public:
 
   void process();
 
+  void setMode();
+
   void setTXDelay(uint8_t value);
   void setTXTail(uint8_t value);
   void setLevel(uint8_t value);
@@ -47,6 +49,7 @@ private:
   q15_t                            m_level;
   uint16_t                         m_txDelay;
   uint16_t                         m_txTail;
+  uint16_t                         m_txScale;
   CTokenStore                      m_tokens;
 
   void writeByte(uint8_t c);

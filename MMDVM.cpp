@@ -49,14 +49,10 @@ void loop()
   io.process();
 
   // The following is for transmitting
-  switch (m_mode) {
-    case 1U:
-      ax25TX.process();
-      break;
-    case 2U:
-      modeNTX.process();
-      break;
-  }
+  if (m_mode == 1U)
+    ax25TX.process();
+  else
+    modeNTX.process();
 }
 
 int main()

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2018,2020,2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -39,8 +39,14 @@
 #define SERIAL_SPEED	115200
 
 // Select the initial packet mode
-// 1 = 1200 bps AFSK AX.25
-// 2 = 9600 bps C4FSK IL2P
+// 1 =  1200 bps  AFSK AX.25
+// 2 =  9600 bps C4FSK IL2P
+// 3 = 14400 bps C4FSK IL2P
+// 4 = 19200 bps C4FSK IL2P
+// 5 = 24000 bps C4FSK IL2P
+// 6 = 28800 bps C4FSK IL2P
+// 7 = 33600 bps C4FSK IL2P
+// 8 = 38400 bps C4FSK IL2P
 #define	INITIAL_MODE	2
 
 // TX Delay in milliseconds

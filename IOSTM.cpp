@@ -1,7 +1,7 @@
 /*
  *   Copyright (C) 2016 by Jim McLaughlin KI6ZUM
  *   Copyright (C) 2016,2017,2018 by Andy Uribe CA6JAU
- *   Copyright (C) 2017,2018,2020,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2017,2018,2020,2023,2024 by Jonathan Naylor G4KLX
  *   Copyright (C) 2019,2020 by BG5HHP
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -26,11 +26,7 @@
 #if defined(STM32F4XX) || defined(STM32F7XX)
 #include "IOPins.h"
 
-
 const uint16_t DC_OFFSET = 2048U;
-
-// Sampling frequency
-#define SAMP_FREQ   24000
 
 extern "C" {
    void TIM2_IRQHandler() {
@@ -159,11 +155,21 @@ void CIO::startInt()
    GPIO_InitStruct.GPIO_PuPd  = GPIO_PuPd_NOPULL;
    GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-   DAC_InitStructure.DAC_Trigger = DAC_Trigger_None;
+   DAC_InitStructure.DAC_Trigger        = DAC_Trigger_None;
    DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
-   DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Enable;
+   DAC_InitStructure.DAC_OutputBuffer   = DAC_OutputBuffer_Enable;
    DAC_Init(PIN_TX_CH, &DAC_InitStructure);
    DAC_Cmd(PIN_TX_CH, ENABLE);
+
+   setSampleRateInt();
+
+   GPIO_ResetBits(PORT_COSLED, PIN_COSLED);
+   GPIO_SetBits(PORT_LED, PIN_LED);
+}
+
+void CIO::setSampleRateInt()
+{
+   // XXX Can this be simplified, or the timer halted first?
 
    // Init the timer
    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
@@ -171,7 +177,7 @@ void CIO::startInt()
 #if defined(EXTERNAL_OSC) && !(defined(STM32F4_PI) || defined(STM32F722_PI))
    // Configure a GPIO as external TIM2 clock source
    GPIO_PinAFConfig(PORT_EXT_CLK, SRC_EXT_CLK, GPIO_AF_TIM2);
-   GPIO_InitStruct.GPIO_Pin = PIN_EXT_CLK;
+   GPIO_InitStruct.GPIO_Pin  = PIN_EXT_CLK;
    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
    GPIO_Init(PORT_EXT_CLK, &GPIO_InitStruct);
 #endif
@@ -181,11 +187,11 @@ void CIO::startInt()
 
    // TIM2 output frequency
 #if defined(EXTERNAL_OSC) && !(defined(STM32F4_PI) || defined(STM32F722_PI))
-   timerInitStructure.TIM_Prescaler = (uint16_t) ((EXTERNAL_OSC/(2*SAMP_FREQ)) - 1);
-   timerInitStructure.TIM_Period = 1;
+   timerInitStructure.TIM_Prescaler = uint16_t((EXTERNAL_OSC / (2U * m_sampleRate)) - 1U);
+   timerInitStructure.TIM_Period    = 1;
 #else
-   timerInitStructure.TIM_Prescaler = (uint16_t) ((SystemCoreClock/(6*SAMP_FREQ)) - 1);
-   timerInitStructure.TIM_Period = 2;
+   timerInitStructure.TIM_Prescaler = uint16_t((SystemCoreClock / (6U * m_sampleRate)) - 1U);
+   timerInitStructure.TIM_Period    = 2;
 #endif
 
    timerInitStructure.TIM_CounterMode       = TIM_CounterMode_Up;
@@ -212,9 +218,6 @@ void CIO::startInt()
    nvicStructure.NVIC_IRQChannelSubPriority        = 1;
    nvicStructure.NVIC_IRQChannelCmd                = ENABLE;
    NVIC_Init(&nvicStructure);
-
-   GPIO_ResetBits(PORT_COSLED, PIN_COSLED);
-   GPIO_SetBits(PORT_LED, PIN_LED);
 }
 
 void CIO::interrupt()

@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2015,2016,2017,2018,2020,2021,2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2015-2018,2020,2021,2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public:
 
   void write(q15_t* samples, uint16_t length);
 
-  void showMode();
+  void setMode();
 
   uint16_t getSpace() const;
 
@@ -66,13 +66,18 @@ private:
 
   volatile uint32_t      m_ledCount;
   bool                   m_ledValue;
+  uint32_t               m_sampleRate;
 
   uint32_t               m_slotCount;
+  uint32_t               m_slotSamples;
+
   bool                   m_canTX;
   uint8_t                m_x;
   uint8_t                m_a;
   uint8_t                m_b;
   uint8_t                m_c;
+
+  void    showMode(uint8_t mode);
   
   void    initRand();
   uint8_t rand();
@@ -80,6 +85,8 @@ private:
   // Hardware specific routines
   void initInt();
   void startInt();
+
+  void setSampleRateInt();
 
   void setLEDInt(bool on);
   void setPTTInt(bool on);

@@ -50,8 +50,9 @@ m_modFilter(),
 m_modState(),
 m_frame(),
 m_level(TX_LEVEL * 128),
-m_txDelay((TX_DELAY / 10U) * 12U),
-m_txTail((TX_TAIL / 10U) * 12U),
+m_txDelay(TX_DELAY / 10U),
+m_txTail(TX_TAIL / 10U),
+m_txScale(12U),
 m_tokens()
 {
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
@@ -116,7 +117,7 @@ void CModeNTX::process()
       space -= MODEN_SYMBOLS_PER_BYTE * MODEN_RADIO_SYMBOL_LENGTH;
 
       if (m_fifo.getData() == 0U) {
-        m_playOut = m_txTail;
+        m_playOut = m_txTail * m_txScale;
         return;
       }
     }
@@ -133,7 +134,7 @@ uint8_t CModeNTX::writeData(const uint8_t* data, uint16_t length)
 
   // Add the preamble symbols
   if (!m_tx && (m_fifo.getData() == 0U)) {
-    for (uint16_t i = 0U; i < m_txDelay; i++)
+    for (uint16_t i = 0U; i < (m_txDelay * m_txScale); i++)
       m_fifo.put(MODEN_PREAMBLE_BYTE);
   }
 
@@ -208,15 +209,21 @@ void CModeNTX::writeSilence()
 
 void CModeNTX::setTXDelay(uint8_t value)
 {
-  m_txDelay = value * 12U;
+  m_txDelay = value;
 }
-  
+
 void CModeNTX::setTXTail(uint8_t value)
 {
-  m_txTail = value * 12U;
+  m_txTail = value;
 }
-  
+
 void CModeNTX::setLevel(uint8_t value)
 {
   m_level = q15_t(value * 128);
 }
+
+void CModeNTX::setMode()
+{
+  m_txScale = m_mode * 6U;
+}
+

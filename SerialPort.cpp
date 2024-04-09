@@ -78,7 +78,8 @@ void CSerialPort::start()
 
   DEBUG1(HARDWARE);
 
-  io.showMode();
+  modeNTX.setMode();
+  io.setMode();
 }
 
 void CSerialPort::process()
@@ -130,14 +131,10 @@ void CSerialPort::processMessage()
 
   switch (m_buffer[0U] & 0x0FU) {
     case KISS_TYPE_DATA:
-      switch (m_mode) {
-        case 1U:
-          ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
-          break;
-        case 2U:
-          modeNTX.writeData(m_buffer + 1U, m_ptr - 1U);
-          break;
-      }
+      if (m_mode == 1U)
+        ax25TX.writeData(m_buffer + 1U, m_ptr - 1U);
+      else
+        modeNTX.writeData(m_buffer + 1U, m_ptr - 1U);
       break;
     case KISS_TYPE_TX_DELAY:
       if (m_ptr == 2U) {
@@ -172,28 +169,27 @@ void CSerialPort::processMessage()
       break;
     case KISS_TYPE_SET_HARDWARE:
       if (m_ptr == 2U) {
-        m_mode = m_buffer[1U];
-        io.showMode();
-        DEBUG2("Setting Mode to", m_buffer[1U]);
-      } else if (m_ptr == 4U) {
+        uint8_t mode = m_buffer[1U];
+        if ((mode > 0U) && (mode < 9U)) {
+          m_mode = mode;
+          modeNTX.setMode();
+          io.setMode();
+          DEBUG2("Setting Mode to", mode);
+        }
+      } else if (m_ptr == 3U) {
         io.setRXLevel(m_buffer[1U]);
-        ax25TX.setLevel(m_buffer[2]);
-        modeNTX.setLevel(m_buffer[3]);
+        ax25TX.setLevel(m_buffer[2U]);
+        modeNTX.setLevel(m_buffer[2U]);
         DEBUG2("Setting RX Level to", m_buffer[1U]);
-        DEBUG2("Setting Mode 1 TX Level to", m_buffer[2U]);
-        DEBUG2("Setting Mode 2 TX Level to", m_buffer[3U]);
+        DEBUG2("Setting TX Level to", m_buffer[2U]);
       }
       break;
     case KISS_TYPE_DATA_WITH_ACK: {
         uint16_t token = (m_buffer[1U] << 8) + (m_buffer[2U] << 0);
-        switch (m_mode) {
-          case 1U:
-            ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
-            break;
-          case 2U:
-            modeNTX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
-            break;
-        }
+        if (m_mode == 1U)
+          ax25TX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
+        else
+          modeNTX.writeDataAck(token, m_buffer + 3U, m_ptr - 3U);
       }
       break;
     default:

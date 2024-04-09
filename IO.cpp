@@ -29,10 +29,12 @@ m_rxBuffer(RX_RINGBUFFER_SIZE),
 m_txBuffer(TX_RINGBUFFER_SIZE),
 m_rxLevel(RX_LEVEL * 128),
 m_pPersist(P_PERSISTENCE),
-m_slotTime((SLOT_TIME / 10U) * 240U),
+m_slotTime(SLOT_TIME),
+m_slotSamples(24U),
 m_dcd(false),
 m_ledCount(0U),
 m_ledValue(true),
+m_sampleRate(24000U),
 m_slotCount(0U),
 m_canTX(false),
 m_x(1U),
@@ -62,33 +64,12 @@ void CIO::selfTest()
   }
 
 #if defined(MODE_LEDS)
-  setMode1Int(false);
-  setMode2Int(false);
-  setMode3Int(false);
-  setMode4Int(false);
+  for (uint8_t i = 0U; i < 15U; i++) {
+    showMode(i);
+    delayInt(250);
+  }
 
-  setMode1Int(true);
-
-  delayInt(250);
-  setMode2Int(true);
-
-  delayInt(250);
-  setMode3Int(true);
-
-  delayInt(250);
-  setMode4Int(true);
-
-  delayInt(250);
-  setMode4Int(false);
-
-  delayInt(250);
-  setMode3Int(false);
-
-  delayInt(250);
-  setMode2Int(false);
-
-  delayInt(250);
-  setMode1Int(false);
+  showMode(0U);
 #endif
 }
 
@@ -108,7 +89,7 @@ void CIO::process()
 #if defined(CONSTANT_SRV_LED)
   setLEDInt(true);
 #else
-  if (m_ledCount >= 24000U) {
+  if (m_ledCount >= m_sampleRate) {
     m_ledCount = 0U;
     m_ledValue = !m_ledValue;
     setLEDInt(m_ledValue);
@@ -129,7 +110,7 @@ void CIO::process()
         m_slotCount = 0U;
       } else {
         m_slotCount += RX_BLOCK_SIZE;
-        if (m_slotCount >= m_slotTime) {
+        if (m_slotCount >= (m_slotTime * m_slotSamples)) {
           m_slotCount = 0U;
           m_canTX = (m_pPersist >= rand());
         }
@@ -147,18 +128,10 @@ void CIO::process()
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }
 
-    switch (m_mode) {
-      case 1U:
-        ax25RX.samples(samples, RX_BLOCK_SIZE);
-        break;
-
-      case 2U:
-        modeNRX.samples(samples, RX_BLOCK_SIZE);
-        break;
-
-      default:
-        break;
-    }
+    if (m_mode == 1U)
+      ax25RX.samples(samples, RX_BLOCK_SIZE);
+    else
+      modeNRX.samples(samples, RX_BLOCK_SIZE);
   }
 }
 
@@ -177,29 +150,28 @@ void CIO::write(q15_t* samples, uint16_t length)
   }
 }
 
-void CIO::showMode()
+void CIO::setMode()
+{
+  if (m_mode == 1U) {
+    m_sampleRate  = 24000U;
+    m_slotSamples = 24U;
+  } else {
+    m_sampleRate  = m_mode * 12000U;
+    m_slotSamples = m_mode * 12U;
+  }
+
+  setSampleRateInt();
+  
+  showMode(m_mode);
+}
+
+void CIO::showMode(uint8_t mode)
 {
 #if defined(MODE_LEDS)
-  switch (m_mode) {
-    case 1U:
-      setMode1Int(true);
-      setMode2Int(false);
-      setMode3Int(false);
-      setMode4Int(false);
-      break;
-    case 2U:
-      setMode1Int(false);
-      setMode2Int(true);
-      setMode3Int(false);
-      setMode4Int(false);
-      break;
-    default:
-      setMode1Int(false);
-      setMode2Int(false);
-      setMode3Int(false);
-      setMode4Int(false);
-      break;
-  }
+  setMode1Int((mode & 0x01U) == 0x01U);
+  setMode2Int((mode & 0x02U) == 0x02U);
+  setMode3Int((mode & 0x04U) == 0x04U);
+  setMode4Int((mode & 0x08U) == 0x08U);
 #endif
 }
 
@@ -228,7 +200,7 @@ void CIO::setPPersist(uint8_t value)
 
 void CIO::setSlotTime(uint8_t value)
 {
-  m_slotTime = value * 240U;
+  m_slotTime = value * 10U;
 }
 
 bool CIO::canTX() const
