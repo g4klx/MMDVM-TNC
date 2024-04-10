@@ -1,10 +1,23 @@
-This is the source code of the MMDVM-TNC firmware that supports standard 1200 bps AFSK AX.25 and 9600 bps C4FSK IL2P in a 12.5 kHz bandwidth. The 9600 bps mode uses the same on-air waveform as DMR, but is incompatible with it in every sense. One big difference is that there is no correct way in which the deviation is decoded and so the receive side is able to detect and decode transmissions of either sense. This is why there is no transmit or receive invert settings to be found anywhere.
+This is the source code of the MMDVM-TNC firmware that supports standard 1200 bps AFSK AX.25 and 9600 bps and higher C4FSK IL2P. The 9600 bps mode fits in a 12.5 kHz bandwidth. The 9600 bps mode uses the same on-air waveform as DMR, but is incompatible with it in every sense. One big difference is that there is no correct way in which the deviation is decoded and so the receive side is able to detect and decode transmissions of either sense. This is why there is no transmit or receive invert settings to be found anywhere.
 
 Standard KISS command over the MMDVM serial port are used, the speed of which is set to 115200 baud, although this can be changed in Config.h at compile time.
 
 The KISS SET HARDWARE command has two versions that allow it to control the modem (all of these settings may also be set in Config.h at compile time).
 
-A SET HARDWARE command with a single one byte argument sets the mode. The modes are 1200 bps AFSK AX.25 is mode 1 and 9600 bps C4FSK IL2P is mode 2. The mode is shown on the modem LEDs with D-Star showing mode 1 and DMR for mode 2. The other version of the command has three one byte arguments, the first byte being the Receive Level which has a range of 0 to 255, the second byte is the mode 1 Transmit Level which may be between 0 and 255, the third byte is the mode 2 Transmit Level which is also between 0 and 255.
+A SET HARDWARE command with a single one byte argument sets the mode. The modes are:
+
+| Mode Number | Desription           | D-Star LED | DMR LED | YSF LED | P25 LED |
+|-------------|----------------------|:----------:|:-------:|:-------:|:-------:|
+| 1           | 1200 bps AFSK AX.25  | On         | Off     | Off     | Off     |
+| 2           | 9600 bps C4FSK IL2P  | Off        | On      | Off     | Off     |
+| 3           | 14400 bps C4FSK IL2P | On         | On      | Off     | Off     |
+| 4           | 19200 bps C4FSK IL2P | Off        | Off     | On      | Off     |
+| 5           | 24000 bps C4FSK IL2P | On         | Off     | On      | Off     |
+| 6           | 28800 bps C4FSK IL2P | Off        | On      | On      | Off     |
+| 7           | 33600 bps C4FSK IL2P | On         | On      | On      | Off     |
+| 8           | 38400 bps C4FSK IL2P | Off        | Off     | Off     | On      |
+ 
+ The other version of the SET HARDWARE command has two one byte arguments, the first byte being the Receive Level which has a range of 0 to 255, the second byte is the Transmit Level which may be between 0 and 255.
 
 Simple debugging is optionally available over the modems display serial port, usually used for Nextion displays, and these are output at 38400 baud. These may be switched on and off in Config.h.
 
