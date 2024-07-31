@@ -38,8 +38,8 @@ const uint16_t RX_FILTER_LEN = 45U;
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_ERRS     = 5U;
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
+const uint8_t MAX_SYNC_BIT_ERRS     = 2U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
