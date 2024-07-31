@@ -34,7 +34,7 @@ static q15_t RX_FILTER[] = {  \
       352, -532, -602, -64, 349, \
       279, -33, -193, -107, 44, \
       89, 32, -30, -41, -9 };
-const uint16_t RX_FILTER_LEN = 42U;
+const uint16_t RX_FILTER_LEN = 45U;
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
