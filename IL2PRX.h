@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -49,12 +49,12 @@ private:
   CHamming m_hamming;
   uint16_t m_headerByteCount;
   uint16_t m_payloadByteCount;
-  uint8_t  m_payloadBlockCount;
-  uint8_t  m_smallBlockSize;
-  uint8_t  m_largeBlockSize;
-  uint8_t  m_largeBlockCount;
-  uint8_t  m_smallBlockCount;
-  uint8_t  m_paritySymbolsPerBlock;
+  uint16_t m_payloadBlockCount;
+  uint16_t m_smallBlockSize;
+  uint16_t m_largeBlockSize;
+  uint16_t m_largeBlockCount;
+  uint16_t m_smallBlockCount;
+  uint16_t m_paritySymbolsPerBlock;
   uint16_t m_outOffset;
 
   void calculatePayloadBlockSize();

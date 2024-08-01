@@ -1,5 +1,5 @@
 /*
- *   Copyright (C) 2023 by Jonathan Naylor G4KLX
+ *   Copyright (C) 2023,2024 by Jonathan Naylor G4KLX
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ bool CIL2PRX::processPayload(const uint8_t* in, uint8_t* out)
 {
   uint16_t payloadOffset = 0U;
 
-  for (uint8_t i = 0U; i < m_largeBlockCount; i++) {
+  for (uint16_t i = 0U; i < m_largeBlockCount; i++) {
     ::memcpy(out + m_outOffset, in + payloadOffset, m_largeBlockSize + m_paritySymbolsPerBlock);
     bool ok = decode(out + m_outOffset, m_largeBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
@@ -108,7 +108,7 @@ bool CIL2PRX::processPayload(const uint8_t* in, uint8_t* out)
     m_outOffset   += m_largeBlockSize;
   }
 
-  for (uint8_t i = 0U; i < m_smallBlockCount; i++) {
+  for (uint16_t i = 0U; i < m_smallBlockCount; i++) {
     ::memcpy(out + m_outOffset, in + payloadOffset, m_smallBlockSize + m_paritySymbolsPerBlock);
     bool ok = decode(out + m_outOffset, m_smallBlockSize, m_paritySymbolsPerBlock);
     if (!ok)
@@ -386,6 +386,8 @@ bool CIL2PRX::decode(uint8_t* buffer, uint16_t length, uint8_t numSymbols) const
       break;
     case 16U:
       derrors = m_rs16.decode(rsBlock, derrlocs);
+      break;
+    default:
       break;
   }
 

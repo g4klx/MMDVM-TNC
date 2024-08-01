@@ -22,11 +22,18 @@
 #include "Globals.h"
 #include "ModeNTX.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {0, 0, 0, 0, 850, 219, -720, -1548, -1795, -1172, 237, 1927, 3120, 3073, 1447, -1431, -4544, -6442,
-                                 -5735, -1633, 5651, 14822, 23810, 30367, 32767, 30367, 23810, 14822, 5651, -1633, -5735, -6442,
-                                 -4544, -1431, 1447, 3073, 3120, 1927, 237, -1172, -1795, -1548, -720, 219, 850}; // numTaps = 45, L = 5
-const uint16_t RRC_0_2_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
+// Gaussian BT 0.6 convolved with 5 sample unit step function.
+static q15_t TX_PULSE_FILTER[] = {  \
+      0, 0, 0, 0, 0, \
+      0, 0, 0, 0, 0, \
+      0, 0, 0, 0, 0, \
+      0, 17, 319, 2659, 10668, \
+      22736, 30728, 32767, 30728, 22736, \
+      10668, 2659, 319, 17, 0, \
+      0, 0, 0, 0, 0, \
+      0, 0, 0, 0, 0, \
+      0, 0, 0, 0, 0 };
+const uint16_t TX_PULSE_FILTER_PHASE_LEN = 9U; // phaseLength = numTaps/L
 
 const q15_t LEVELA =  1362;
 const q15_t LEVELB =  454;
@@ -58,8 +65,8 @@ m_tokens()
   ::memset(m_modState, 0x00U, 16U * sizeof(q15_t));
 
   m_modFilter.L           = MODEN_RADIO_SYMBOL_LENGTH;
-  m_modFilter.phaseLength = RRC_0_2_FILTER_PHASE_LEN;
-  m_modFilter.pCoeffs     = RRC_0_2_FILTER;
+  m_modFilter.phaseLength = TX_PULSE_FILTER_PHASE_LEN;
+  m_modFilter.pCoeffs     = TX_PULSE_FILTER;
   m_modFilter.pState      = m_modState;
 }
 

@@ -23,16 +23,23 @@
 #include "ModeNRX.h"
 #include "Utils.h"
 
-// Generated using rcosdesign(0.2, 8, 5, 'sqrt') in MATLAB
-static q15_t RRC_0_2_FILTER[] = {401, 104, -340, -731, -847, -553, 112, 909, 1472, 1450, 683, -675, -2144, -3040, -2706, -770, 2667, 6995,
-                                 11237, 14331, 15464, 14331, 11237, 6995, 2667, -770, -2706, -3040, -2144, -675, 683, 1450, 1472, 909, 112,
-                                 -553, -847, -731, -340, 104, 401, 0};
-const uint16_t RRC_0_2_FILTER_LEN = 42U;
+// LPF, cutoff = 0.9 * 4800 (4320)
+static q15_t RX_FILTER[] = {  \
+      -9, -41, -30, 32, 89, \
+      44, -107, -193, -33, 279, \
+      349, -64, -602, -532, 352, \
+      1175, 706, -1090, -2379, -830, \
+      3951, 9411, 11818, 9411, 3951, \
+      -830, -2379, -1090, 706, 1175, \
+      352, -532, -602, -64, 349, \
+      279, -33, -193, -107, 44, \
+      89, 32, -30, -41, -9 };
+const uint16_t RX_FILTER_LEN = 45U;
 
 const q15_t SCALING_FACTOR = 18750;      // Q15(0.55)
 
-const uint8_t MAX_SYNC_BIT_ERRS     = 5U;
-const uint8_t MAX_SYNC_SYMBOLS_ERRS = 4U;
+const uint8_t MAX_SYNC_BIT_ERRS     = 2U;
+const uint8_t MAX_SYNC_SYMBOLS_ERRS = 1U;
 
 const uint8_t BIT_MASK_TABLE[] = {0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04U, 0x02U, 0x01U};
 
@@ -63,9 +70,9 @@ m_countdown(0U),
 m_packet()
 {
   ::memset(m_rrc02State, 0x00U, 70U * sizeof(q15_t));
-  m_rrc02Filter.numTaps = RRC_0_2_FILTER_LEN;
+  m_rrc02Filter.numTaps = RX_FILTER_LEN;
   m_rrc02Filter.pState  = m_rrc02State;
-  m_rrc02Filter.pCoeffs = RRC_0_2_FILTER;
+  m_rrc02Filter.pCoeffs = RX_FILTER;
 }
 
 void CModeNRX::reset()
