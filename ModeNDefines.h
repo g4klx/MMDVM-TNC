@@ -48,17 +48,13 @@ const uint8_t  MODEN_HEADER_LENGTH_BYTES   = 13U;
 const uint8_t  MODEN_HEADER_LENGTH_SYMBOLS = MODEN_HEADER_LENGTH_BYTES * MODEN_SYMBOLS_PER_BYTE;
 const uint16_t MODEN_HEADER_LENGTH_SAMPLES = MODEN_HEADER_LENGTH_SYMBOLS * MODEN_RADIO_SYMBOL_LENGTH;
 
-const uint64_t MODEN_SYNC_BITS      = 0x5D57DF7FU;
-const uint64_t MODEN_SYNC_BITS_MASK = 0xFFFFFFFFU;
-
 // 5     D      5     7      D     F      7     F
 // 01 01 11 01  01 01 01 11  11 01 11 11  01 11 11 11
 // +3 +3 -3 +3  +3 +3 +3 -3  -3 +3 -3 -3  +3 -3 -3 -3
 
-const int8_t MODEN_SYNC_SYMBOLS_VALUES[] = { +3, +3, -3, +3,    +3, +3, +3, -3,   -3, +3, -3, -3,  +3, -3, -3, -3};
+const int8_t MODEN_SYNC_SYMBOLS_VALUES[] = {+3, +3, -3, +3,    +3, +3, +3, -3,   -3, +3, -3, -3,  +3, -3, -3, -3};
 
-const uint32_t MODEN_SYNC_SYMBOLS      = 0xDE48U;
-const uint32_t MODEN_SYNC_SYMBOLS_MASK = 0xFFFFU;
+const uint16_t MODEN_SYNC_SYMBOLS = 0xDE48U;
 
 #endif
 

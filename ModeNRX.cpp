@@ -253,8 +253,8 @@ void CModeNRX::processCRC(q15_t sample)
 
 bool CModeNRX::correlateSync()
 {
-  uint8_t n1 = countBits32((m_bitBuffer[m_bitPtr] ^  MODEN_SYNC_SYMBOLS) & MODEN_SYNC_SYMBOLS_MASK);
-  uint8_t n2 = countBits32((m_bitBuffer[m_bitPtr] ^ ~MODEN_SYNC_SYMBOLS) & MODEN_SYNC_SYMBOLS_MASK);
+  uint8_t n1 = countBits16(m_bitBuffer[m_bitPtr] ^  MODEN_SYNC_SYMBOLS);
+  uint8_t n2 = countBits16(m_bitBuffer[m_bitPtr] ^ ~MODEN_SYNC_SYMBOLS);
 
   if ((n1 <= MAX_SYNC_SYMBOLS_ERRS) || (n2 <= MAX_SYNC_SYMBOLS_ERRS)) {
     uint16_t ptr = m_dataPtr + MODEN_MAX_LENGTH_SAMPLES - MODEN_SYNC_LENGTH_SAMPLES;

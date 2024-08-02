@@ -45,7 +45,7 @@ private:
   MODENRX_STATE        m_state;
   arm_fir_instance_q15 m_rrc02Filter;
   q15_t                m_rrc02State[70U];         // NoTaps + BlockSize - 1, 42 + 20 - 1 plus some spare
-  uint32_t             m_bitBuffer[MODEN_RADIO_SYMBOL_LENGTH];
+  uint16_t             m_bitBuffer[MODEN_RADIO_SYMBOL_LENGTH];
   q15_t                m_buffer[MODEN_MAX_LENGTH_SAMPLES];
   uint16_t             m_bitPtr;
   uint16_t             m_dataPtr;
