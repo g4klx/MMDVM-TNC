@@ -16,6 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
 #if !defined(MODE2DEFINES_H)
 #define  MODE2DEFINES_H
 
@@ -39,26 +40,26 @@ const uint8_t  MODE2_CRC_LENGTH_BYTES     = 4U;
 const uint8_t  MODE2_CRC_LENGTH_SYMBOLS   = MODE2_CRC_LENGTH_BYTES * MODE2_SYMBOLS_PER_BYTE;
 const uint16_t MODE2_CRC_LENGTH_SAMPLES   = MODE2_CRC_LENGTH_SYMBOLS * MODE2_RADIO_SYMBOL_LENGTH;
 
-const uint8_t  MODE2_SYNC_LENGTH_BYTES   = 3U;
+const uint8_t  MODE2_SYNC_LENGTH_BYTES   = 4U;
 const uint8_t  MODE2_SYNC_LENGTH_SYMBOLS = MODE2_SYNC_LENGTH_BYTES * MODE2_SYMBOLS_PER_BYTE;
 const uint16_t MODE2_SYNC_LENGTH_SAMPLES = MODE2_SYNC_LENGTH_SYMBOLS * MODE2_RADIO_SYMBOL_LENGTH;
-const uint8_t  MODE2_SYNC_BYTES[]        = {0x57U, 0xDFU, 0x7FU};
+const uint8_t  MODE2_SYNC_BYTES[]        = { 0x5D, 0x57U, 0xDFU, 0x7FU};
 
 const uint8_t  MODE2_HEADER_LENGTH_BYTES   = 13U;
 const uint8_t  MODE2_HEADER_LENGTH_SYMBOLS = MODE2_HEADER_LENGTH_BYTES * MODE2_SYMBOLS_PER_BYTE;
 const uint16_t MODE2_HEADER_LENGTH_SAMPLES = MODE2_HEADER_LENGTH_SYMBOLS * MODE2_RADIO_SYMBOL_LENGTH;
 
-const uint64_t MODE2_SYNC_BITS      = 0x000057DF7FU;
-const uint64_t MODE2_SYNC_BITS_MASK = 0x0000FFFFFFU;
+const uint64_t MODE2_SYNC_BITS      = 0x5D57DF7FU;
+const uint64_t MODE2_SYNC_BITS_MASK = 0xFFFFFFFFU;
 
-// 5     7      D     F      7     F
-// 01 01 01 11  11 01 11 11  01 11 11 11
-// +3 +3 +3 -3  -3 +3 -3 -3  +3 -3 -3 -3
+// 5     D      5     7      D     F      7     F
+// 01 01 11 01  01 01 01 11  11 01 11 11  01 11 11 11
+// +3 +3 -3 +3  +3 +3 +3 -3  -3 +3 -3 -3  +3 -3 -3 -3
 
-const int8_t MODE2_SYNC_SYMBOLS_VALUES[] = { +3, +3, +3, -3,  -3, +3, -3, -3,  +3, -3, -3, -3};
+const int8_t MODE2_SYNC_SYMBOLS_VALUES[] = { +3, +3, -3, +3,    +3, +3, +3, -3,   -3, +3, -3, -3,  +3, -3, -3, -3};
 
-const uint32_t MODE2_SYNC_SYMBOLS      = 0x00E48U;
-const uint32_t MODE2_SYNC_SYMBOLS_MASK = 0x00FFFU;
+const uint32_t MODE2_SYNC_SYMBOLS      = 0xDE48U;
+const uint32_t MODE2_SYNC_SYMBOLS_MASK = 0xFFFFU;
 
 #endif
 
